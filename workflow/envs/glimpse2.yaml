@@ -5,5 +5,5 @@ channels:
   - nodefaults
 dependencies:
   - glimpse-bio=2.0.1
-  - htslib=1.21
-  - tabix=1.11
+  - htslib=1.23.1
+  - bcftools=1.23.1
