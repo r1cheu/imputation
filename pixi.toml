@@ -19,6 +19,12 @@ wget = "*"
 [environments]
 test = ["test"]
 
+[activation.env]
+# Between-workflow output cache for reusable rules (bwa_mem2_index, samtools_faidx,
+# panel_index, split_panel, glimpse2_split_reference). Override to a shared path
+# (e.g. /shared/snakemake-cache) when reusing reference/panel across projects.
+SNAKEMAKE_OUTPUT_CACHE = ".snakemake-cache"
+
 [tasks]
 dry = "snakemake -n --cores 1"
 lint = "snakemake --lint"

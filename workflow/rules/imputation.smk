@@ -12,13 +12,13 @@ checkpoint glimpse2_chunk:
     threads: 1
     resources:
         mem_mb=2000,
-        runtime=30,
     params:
+        chrom=lambda wc: wc.chrom,
         window_mb=config["glimpse2_chunk"]["window_mb"],
         buffer_mb=config["glimpse2_chunk"]["buffer_mb"],
         extra=config["glimpse2_chunk"]["extra"],
     shell:
-        "GLIMPSE2_chunk --input {input.vcf} --map {input.gmap} --region {wildcards.chrom} "
+        "GLIMPSE2_chunk --input {input.vcf} --map {input.gmap} --region {params.chrom} "
         "--window-mb {params.window_mb} --buffer-mb {params.buffer_mb} --sequential "
         "--threads {threads} --output {output} {params.extra} > {log} 2>&1"
 
@@ -35,11 +35,11 @@ rule glimpse2_split_reference:
         "logs/glimpse2_split_reference/{chrom}_chunk_{idx}.log",
     conda:
         "../envs/glimpse2.yaml"
+    cache: True
     threads: 2
     resources:
         mem_mb=8000,
         cpus_per_task=2,
-        runtime=120,
     params:
         prefix=lambda wc: f"results/refbin/{wc.chrom}/chunk_{wc.idx}",
         input_region=lambda wc: get_chunk_region(wc, "input_region"),
@@ -65,7 +65,6 @@ rule make_bam_list:
         "../envs/bwa-mem2.yaml"
     resources:
         mem_mb=1000,
-        runtime=15,
     shell:
         "(for f in {input.bams}; do readlink -f $f; done > {output}) 2> {log}"
 
@@ -87,7 +86,6 @@ rule glimpse2_phase:
     resources:
         mem_mb=32000,
         cpus_per_task=8,
-        runtime=1440,
     shell:
         "(GLIMPSE2_phase --bam-list {input.bam_list} --reference {input.ref_bin} "
         "--threads {threads} --output {output.bcf} && "
@@ -109,7 +107,6 @@ rule glimpse2_ligate:
     resources:
         mem_mb=8000,
         cpus_per_task=4,
-        runtime=240,
     params:
         listfile="results/phased/{chrom}/ligate.list",
     shell:

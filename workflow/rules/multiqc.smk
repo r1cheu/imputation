@@ -16,7 +16,6 @@ rule multiqc:
         "../envs/multiqc.yaml"
     resources:
         mem_mb=8000,
-        runtime=60,
     params:
         outdir=lambda wc, output: str(Path(output.report).parent),
         scan_dirs="results/qc logs/fastp",

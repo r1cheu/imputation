@@ -14,11 +14,11 @@ rule bwa_mem2_index:
         "logs/reference/bwa_mem2_index.log",
     conda:
         "../envs/bwa-mem2.yaml"
+    cache: True
     threads: 8
     resources:
         mem_mb=32000,
         cpus_per_task=8,
-        runtime=120,
     shell:
         "bwa-mem2 index {input} > {log} 2>&1"
 
@@ -32,9 +32,9 @@ rule samtools_faidx:
         "logs/reference/samtools_faidx.log",
     conda:
         "../envs/bwa-mem2.yaml"
+    cache: True
     resources:
         mem_mb=2000,
-        runtime=30,
     shell:
         "samtools faidx {input} > {log} 2>&1"
 
@@ -48,9 +48,9 @@ rule panel_index:
         "logs/reference/panel_index.log",
     conda:
         "../envs/bcftools.yaml"
+    cache: True
     resources:
         mem_mb=2000,
-        runtime=60,
     shell:
         "tabix -p vcf {input} > {log} 2>&1"
 
@@ -66,11 +66,13 @@ rule split_panel:
         "logs/panel/split_{chrom}.log",
     conda:
         "../envs/bcftools.yaml"
+    cache: True
     threads: 4
     resources:
         mem_mb=4000,
         cpus_per_task=4,
-        runtime=120,
+    params:
+        chrom=lambda wc: wc.chrom,
     shell:
-        "(bcftools view -r {wildcards.chrom} -Oz -o {output.vcf} --threads {threads} {input.vcf} && "
+        "(bcftools view -r {params.chrom} -Oz -o {output.vcf} --threads {threads} {input.vcf} && "
         "tabix -p vcf {output.vcf}) > {log} 2>&1"

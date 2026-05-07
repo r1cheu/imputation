@@ -19,7 +19,6 @@ rule bwa_mem2_mem:
     resources:
         mem_mb=8000,
         cpus_per_task=4,
-        runtime=360,
     params:
         rg=get_read_group,
         idx_prefix=lambda wc, input: input.idx[0].rsplit(".0123", 1)[0],
@@ -42,7 +41,6 @@ rule mark_duplicates:
     resources:
         mem_mb=4000,
         cpus_per_task=2,
-        runtime=180,
     shell:
         # samtools markdup needs name-sorted -> fixmate -> coord-sorted -> markdup
         "(samtools collate -@ {threads} -O -u {input} | "
@@ -62,7 +60,6 @@ rule index_bam:
         "../envs/bwa-mem2.yaml"
     resources:
         mem_mb=1000,
-        runtime=30,
     shell:
         "samtools index {input} > {log} 2>&1"
 
@@ -79,6 +76,5 @@ rule samtools_flagstat:
         "../envs/bwa-mem2.yaml"
     resources:
         mem_mb=1000,
-        runtime=15,
     shell:
         "samtools flagstat {input.bam} > {output} 2> {log}"

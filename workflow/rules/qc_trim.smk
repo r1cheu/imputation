@@ -14,7 +14,6 @@ rule fastqc_raw:
     resources:
         mem_mb=2000,
         cpus_per_task=2,
-        runtime=60,
     params:
         outdir=lambda wc, output: str(Path(output.r1_html).parent),
     shell:
@@ -45,7 +44,6 @@ rule fastp_trim:
     resources:
         mem_mb=2000,
         cpus_per_task=2,
-        runtime=120,
     params:
         extra=config["fastp"]["extra"],
     shell:

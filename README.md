@@ -45,6 +45,24 @@ pixi run run                       # SLURM submission via slurm/config.yaml
 
 See `config/README.md` for the configuration reference.
 
+### Between-workflow caching
+
+Reference- and panel-only rules are marked `cache: True` so their outputs can be
+shared across runs/projects:
+
+- `bwa_mem2_index`, `samtools_faidx`
+- `panel_index`, `split_panel`
+- `glimpse2_split_reference`
+
+`pixi.toml` defaults `SNAKEMAKE_OUTPUT_CACHE=.snakemake-cache`. To share the cache
+across projects (recommended for a fixed reference + panel), set it to a shared
+path before invoking pixi tasks:
+
+```bash
+export SNAKEMAKE_OUTPUT_CACHE=/shared/snakemake-cache
+pixi run run
+```
+
 ## Layout
 
 ```
