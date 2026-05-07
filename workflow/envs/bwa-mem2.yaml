@@ -1,7 +1,8 @@
-name: simulate_reads
+name: bwa-mem2
 channels:
   - conda-forge
   - bioconda
   - nodefaults
 dependencies:
-  - dwgsim=1.1.14
+  - bwa-mem2=2.2.1
+  - samtools=1.21

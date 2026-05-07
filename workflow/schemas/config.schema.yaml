@@ -1,38 +1,90 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 type: object
-description: main configuration schema for the workflow
+description: configuration schema for the rice imputation pipeline
+
 properties:
   sample_sheet:
     type: string
-    description: path to sample sheet, mandatory
     default: config/samples.tsv
 
-  get_genome:
+  reference:
     type: object
     properties:
-      ncbi_ftp:
+      fasta:
         type: string
-        description: URL for genome retrieval from NCBI FTP server
+        description: path to the reference genome FASTA
+    required:
+      - fasta
+
+  panel:
+    type: object
+    properties:
+      vcf:
+        type: string
+        description: path to the phased reference panel VCF (whole genome, bgzipped)
+    required:
+      - vcf
+
+  chromosomes:
+    type: array
+    items:
+      type: string
+    minItems: 1
+    description: chromosome names matching the reference and panel
+
+  genetic_map:
+    type: object
+    properties:
+      template:
+        type: string
+        description: per-chromosome genetic map path template, e.g. "maps/{chrom}.gmap"
+    required:
+      - template
+
+  glimpse2_chunk:
+    type: object
+    properties:
+      window_mb:
+        type: number
+        default: 4.0
+      buffer_mb:
+        type: number
+        default: 0.5
+      extra:
+        type: string
         default: ""
     required:
-      - ncbi_ftp
+      - window_mb
+      - buffer_mb
 
-  simulate_reads:
+  fastp:
     type: object
     properties:
-      read_length:
+      threads:
         type: integer
-        description: length of target reads in bp
-        default: 100
-      read_number:
+        default: 4
+      extra:
+        type: string
+        default: ""
+
+  bwa_mem2:
+    type: object
+    properties:
+      threads:
         type: integer
-        description: number of total reads to be simulated
-        default: 10000
-    required:
-      - read_length
-      - read_number
+        default: 8
+
+  glimpse2_phase:
+    type: object
+    properties:
+      threads:
+        type: integer
+        default: 4
 
 required:
   - sample_sheet
-  - get_genome
-  - simulate_reads
+  - reference
+  - panel
+  - chromosomes
+  - genetic_map
+  - glimpse2_chunk

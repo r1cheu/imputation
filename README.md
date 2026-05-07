@@ -1,78 +1,65 @@
-# Snakemake workflow: `<name>`
+# Snakemake workflow: rice imputation
 
-[![Snakemake](https://img.shields.io/badge/snakemake-≥8.0.0-brightgreen.svg)](https://snakemake.github.io)
-[![GitHub actions status](https://github.com/<owner>/<repo>/workflows/Tests/badge.svg?branch=main)](https://github.com/<owner>/<repo>/actions?query=branch%3Amain+workflow%3ATests)
+[![Snakemake](https://img.shields.io/badge/snakemake-%E2%89%A58.20-brightgreen.svg)](https://snakemake.github.io)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
-[![workflow catalog](https://img.shields.io/badge/Snakemake%20workflow%20catalog-darkgreen)](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/<owner>/<repo>)
 
-A Snakemake workflow for `<description>`
+A Snakemake workflow for genotype imputation of low-coverage rice sequencing data using **GLIMPSE2**.
 
-- [Snakemake workflow: `<name>`](#snakemake-workflow-name)
-  - [Usage](#usage)
-  - [Deployment options](#deployment-options)
-  - [Workflow profiles](#workflow-profiles)
-  - [Authors](#authors)
-  - [References](#references)
-  - [TODO](#todo)
+## Overview
+
+```
+FASTQ ──▶ fastqc / fastp trim ──▶ bwa-mem2 mem ──▶ samtools sort + markdup ──▶ BAM
+                                                                                │
+phased panel VCF ──▶ split per-chrom ──▶ GLIMPSE2_chunk ──▶ split_reference     │
+                                                                │               │
+                                                                └──▶ GLIMPSE2_phase (--bam-list)
+                                                                              │
+                                                                              ▼
+                                                              GLIMPSE2_ligate ──▶ per-chrom VCF
+```
+
+## Requirements
+
+- Linux + [pixi](https://pixi.sh) (manages snakemake itself)
+- conda / mamba (auto-managed by snakemake `--sdm conda`)
+- A SLURM cluster (optional; local execution also works)
+
+User-supplied resources (paths in `config/config.yaml`):
+
+| Item | Where to put it |
+|---|---|
+| Reference FASTA | `reference.fasta` |
+| Phased reference panel VCF (whole genome, bgzipped) | `panel.vcf` |
+| Per-chromosome genetic maps in GLIMPSE2 format | matching `genetic_map.template` |
+| Per-sample paired-end FASTQ | listed in `config/samples.tsv` |
 
 ## Usage
 
-The usage of this workflow is described in the [Snakemake Workflow Catalog](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/<owner>/<repo>).
-This includes a visualization of the workflow diagram and a table with all workflow parameters.
-
-Detailed information about input data and workflow configuration can also be found in the [`config/README.md`](config/README.md).
-
-If you use this workflow in a paper, don't forget to give credits to the authors by citing the URL of this repository or its DOI.
-
-## Deployment options
-
-To run the workflow from command line, change the working directory.
-
 ```bash
-cd path/to/snakemake-workflow-name
+pixi install                       # install snakemake + slurm plugin into .pixi/
+pixi run envs                      # pre-create per-rule conda envs (optional)
+pixi run dry                       # dry-run
+pixi run local                     # local execution with 8 cores
+pixi run run                       # SLURM submission via slurm/config.yaml
 ```
 
-Adjust options in the default config file `config/config.yaml`.
-Before running the complete workflow, you can perform a dry run using:
+See `config/README.md` for the configuration reference.
 
-```bash
-snakemake --dry-run
+## Layout
+
 ```
-
-To run the workflow with test files using **conda**:
-
-```bash
-snakemake --cores 2 --sdm conda --directory .test
+config/         user-facing config (config.yaml + samples.tsv)
+slurm/          snakemake-executor-plugin-slurm profile
+workflow/
+  Snakefile     main entry; rule all = per-chrom imputed VCF + multiqc report
+  rules/        common, reference, qc_trim, align, imputation, multiqc
+  envs/         per-rule conda environments
+  schemas/      config and sample-sheet JSON schemas
+pixi.toml       pixi project manifest
 ```
-
-To run the workflow with **apptainer** / **singularity**, add a link to a container registry in the `Snakefile`, for example `container: "oras://ghcr.io/<user>/<repository>:<version>"` for Github's container registry.
-Run the workflow with:
-
-```bash
-snakemake --cores 2 --sdm conda apptainer --directory .test
-```
-
-## Workflow profiles
-
-The `profiles/` directory can contain any number of [workflow-specific profiles](https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles) that users can choose from.
-The [profiles `README.md`](profiles/README.md) provides more details.
-
-## Authors
-
-- Firstname Lastname
-  - Affiliation
-  - ORCID profile
-  - home page
 
 ## References
 
-> Köster, J., Mölder, F., Jablonski, K. P., Letcher, B., Hall, M. B., Tomkins-Tinch, C. H., Sochat, V., Forster, J., Lee, S., Twardziok, S. O., Kanitz, A., Wilm, A., Holtgrewe, M., Rahmann, S., & Nahnsen, S. _Sustainable data analysis with Snakemake_. F1000Research, 10:33, 10, 33, **2021**. https://doi.org/10.12688/f1000research.29032.2.
-
-## TODO
-
-- Replace `<owner>` and `<repo>` everywhere in the template with the correct user name/organization, and the repository name. The workflow will be automatically added to the [snakemake workflow catalog](https://snakemake.github.io/snakemake-workflow-catalog/index.html) once it is publicly available on Github.
-- Replace `<name>` with the workflow name (can be the same as `<repo>`).
-- Replace `<description>` with a description of what the workflow does.
-- Update the [deployment](#deployment-options), [authors](#authors) and [references](#references) sections.
-- Update the `README.md` badges. Add or remove badges for `conda`/`singularity`/`apptainer` usage depending on the workflow's [deployment](#deployment-options) options.
-- Do not forget to also adjust the configuration-specific `config/README.md` file.
+- Rubinacci S. et al. *Imputation of low-coverage sequencing data from 150,119 UK Biobank genomes.* Nat. Genet. 2023. (GLIMPSE2)
+- Vasimuddin Md. et al. *Efficient Architecture-Aware Acceleration of BWA-MEM for Multicore Systems.* IPDPS 2019. (bwa-mem2)
+- Köster J. et al. *Sustainable data analysis with Snakemake.* F1000Research 2021.

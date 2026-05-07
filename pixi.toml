@@ -1,0 +1,20 @@
+[workspace]
+name = "rice-imputation"
+version = "0.1.0"
+description = "Low-coverage rice sequencing imputation pipeline using GLIMPSE2"
+channels = ["conda-forge", "bioconda"]
+platforms = ["linux-64"]
+
+[dependencies]
+snakemake = ">=8.20"
+snakemake-executor-plugin-slurm = "*"
+snakefmt = "*"
+
+[tasks]
+dry = "snakemake -n --cores 1"
+lint = "snakemake --lint"
+fmt = "snakefmt workflow/"
+envs = "snakemake --sdm conda --conda-create-envs-only --cores 1"
+run = "snakemake --profile slurm --sdm conda"
+local = "snakemake --sdm conda --cores 8"
+unlock = "snakemake --unlock"

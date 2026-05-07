@@ -1,25 +1,21 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-description: entries for the sample sheet
+description: sample sheet entries
+type: object
 properties:
   sample:
     type: string
-    description: sample name/identifier
-  condition:
+    description: unique sample identifier
+  platform:
     type: string
-    description: sample condition that will be compared during differential analysis
-  replicate:
-    type: integer
-    default: 1
-    description: consecutive numbers representing multiple replicates of one condition
-  read1:
+    default: ILLUMINA
+    description: sequencing platform written into the BAM read group
+  fq1:
     type: string
-    description: names of fastq.gz files, read 1
-  read2:
+    description: path to read 1 FASTQ (gz)
+  fq2:
     type: string
-    description: names of fastq.gz files, read 2 (optional)
-
+    description: path to read 2 FASTQ (gz)
 required:
   - sample
-  - condition
-  - replicate
-  - read1
+  - fq1
+  - fq2

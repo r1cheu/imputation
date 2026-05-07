@@ -1,8 +1,39 @@
-sample_sheet: ".test/config/samples.tsv"
+sample_sheet: "config/samples.tsv"
 
-get_genome:
-  ncbi_ftp: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/146/045/GCF_000146045.2_R64/GCF_000146045.2_R64_genomic.fna.gz
+reference:
+  fasta: "resources/reference/IRGSP-1.0.fa"
 
-simulate_reads:
-  read_length: 100
-  read_number: 10000
+panel:
+  vcf: "resources/panel/3kRG.phased.vcf.gz"
+
+chromosomes:
+  - "chr01"
+  - "chr02"
+  - "chr03"
+  - "chr04"
+  - "chr05"
+  - "chr06"
+  - "chr07"
+  - "chr08"
+  - "chr09"
+  - "chr10"
+  - "chr11"
+  - "chr12"
+
+genetic_map:
+  template: "resources/maps/{chrom}.gmap"
+
+glimpse2_chunk:
+  window_mb: 4.0
+  buffer_mb: 0.5
+  extra: ""
+
+fastp:
+  threads: 4
+  extra: ""
+
+bwa_mem2:
+  threads: 8
+
+glimpse2_phase:
+  threads: 4

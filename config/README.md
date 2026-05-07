@@ -1,24 +1,28 @@
-## Workflow overview
+# Configuration
 
-This workflow is a best-practice workflow for `<detailed description>`.
-The workflow is built using [snakemake](https://snakemake.readthedocs.io/en/stable/) and consists of the following steps:
+## `config.yaml`
 
-1. Download genome reference from NCBI
-2. Validate downloaded genome (`python` script)
-3. Simulate short read sequencing data on the fly (`dwgsim`)
-4. Check quality of input read data (`FastQC`)
-5. Collect statistics from tool output (`MultiQC`)
+| Key | Meaning |
+|---|---|
+| `sample_sheet` | TSV listing samples (see below) |
+| `reference.fasta` | Reference genome FASTA (e.g. IRGSP-1.0). Indices are built by the workflow. |
+| `panel.vcf` | Whole-genome phased reference panel VCF, bgzipped. Will be split per chromosome. |
+| `chromosomes` | List of chromosome names. Must match both reference and panel. |
+| `genetic_map.template` | Per-chromosome genetic map path template, e.g. `resources/maps/{chrom}.gmap`. Format expected by GLIMPSE2: `pos chr cM`. |
+| `glimpse2_chunk.window_mb` | GLIMPSE2_chunk `--window-mb` (default 4.0) |
+| `glimpse2_chunk.buffer_mb` | GLIMPSE2_chunk `--buffer-mb` (default 0.5) |
+| `glimpse2_chunk.extra` | Extra flags passed verbatim to GLIMPSE2_chunk |
+| `fastp.threads` | Threads per fastp job |
+| `bwa_mem2.threads` | Threads per bwa-mem2 mem job |
+| `glimpse2_phase.threads` | Threads per GLIMPSE2_phase job |
 
-## Running the workflow
+## `samples.tsv`
 
-### Input data
+Tab-separated, one sample per row.
 
-This template workflow creates artificial sequencing data in `*.fastq.gz` format.
-It does not contain actual input data.
-The simulated input files are nevertheless created based on a mandatory table linked in the `config.yaml` file (default: `.test/samples.tsv`).
-The sample sheet has the following layout:
-
-| sample  | condition | replicate | read1                      | read2                      |
-| ------- | --------- | --------- | -------------------------- | -------------------------- |
-| sample1 | wild_type | 1         | sample1.bwa.read1.fastq.gz | sample1.bwa.read2.fastq.gz |
-| sample2 | wild_type | 2         | sample2.bwa.read1.fastq.gz | sample2.bwa.read2.fastq.gz |
+| Column | Required | Meaning |
+|---|---|---|
+| `sample` | yes | unique sample id (used as RG ID/SM) |
+| `platform` | yes | sequencing platform string (RG PL), e.g. `ILLUMINA` |
+| `fq1` | yes | path to read 1 fastq.gz |
+| `fq2` | yes | path to read 2 fastq.gz |
