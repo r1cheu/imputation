@@ -23,13 +23,13 @@ test = ["test"]
 # Between-workflow output cache for reusable rules (bwa_mem2_index, samtools_faidx,
 # panel_index, split_panel, glimpse2_split_reference). Override to a shared path
 # (e.g. /shared/snakemake-cache) when reusing reference/panel across projects.
-SNAKEMAKE_OUTPUT_CACHE = ".snakemake-cache"
+SNAKEMAKE_OUTPUT_CACHE = "$PIXI_PROJECT_ROOT/.snakemake-cache"
 
 [tasks]
-dry = "snakemake -n --cores 1"
+dry = "snakemake -n --cores 1 --cache"
 lint = "snakemake --lint"
 fmt = "snakefmt workflow/"
 envs = "snakemake --sdm conda --conda-create-envs-only --cores 1"
-run = "snakemake --profile slurm --sdm conda"
-local = "snakemake --sdm conda --cores 8"
+run = "snakemake --profile slurm --sdm conda --cache"
+local = "snakemake --sdm conda --cores 8 --cache"
 unlock = "snakemake --unlock"

@@ -49,13 +49,20 @@ def all_sample_bais():
     return [f"results/dedup/{s}.bam.bai" for s in SAMPLES]
 
 
-CHUNK_COLS = ["idx", "chrom", "input_region", "output_region", "length", "n_variants"]
+CHUNK_COLS = ["idx", "chrom", "input_region", "output_region"]
 
 
 def read_chunks(chrom):
     path = checkpoints.glimpse2_chunk.get(chrom=chrom).output[0]
     df = pd.read_csv(
-        path, sep=r"\s+", header=None, comment="#", names=CHUNK_COLS, dtype=str
+        path,
+        sep=r"\s+",
+        header=None,
+        comment="#",
+        usecols=[0, 1, 2, 3],
+        names=CHUNK_COLS,
+        index_col=False,
+        dtype=str,
     )
     return df
 
