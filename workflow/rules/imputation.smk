@@ -1,7 +1,7 @@
 checkpoint glimpse2_chunk:
     input:
-        vcf="results/panel/{chrom}.vcf.gz",
-        tbi="results/panel/{chrom}.vcf.gz.tbi",
+        bcf="results/panel/{chrom}.sites.bcf",
+        csi="results/panel/{chrom}.sites.bcf.csi",
         gmap=get_map,
     output:
         "results/chunks/{chrom}.txt",
@@ -18,15 +18,15 @@ checkpoint glimpse2_chunk:
         buffer_mb=config["glimpse2_chunk"]["buffer_mb"],
         extra=config["glimpse2_chunk"]["extra"],
     shell:
-        "GLIMPSE2_chunk --input {input.vcf} --map {input.gmap} --region {params.chrom} "
+        "GLIMPSE2_chunk --input {input.bcf} --map {input.gmap} --region {params.chrom} "
         "--window-mb {params.window_mb} --buffer-mb {params.buffer_mb} --sequential "
         "--threads {threads} --output {output} {params.extra} > {log} 2>&1"
 
 
 rule glimpse2_split_reference:
     input:
-        vcf="results/panel/{chrom}.vcf.gz",
-        tbi="results/panel/{chrom}.vcf.gz.tbi",
+        bcf="results/panel/{chrom}.bcf",
+        csi="results/panel/{chrom}.bcf.csi",
         gmap=get_map,
         chunks="results/chunks/{chrom}.txt",
     output:
@@ -47,7 +47,7 @@ rule glimpse2_split_reference:
     shell:
         # GLIMPSE2_split_reference appends "_<chr>_<start>_<end>.bin" to --output;
         # rename the single produced file to the canonical {prefix}.bin.
-        "GLIMPSE2_split_reference --reference {input.vcf} --map {input.gmap} "
+        "GLIMPSE2_split_reference --reference {input.bcf} --map {input.gmap} "
         "--input-region {params.input_region} --output-region {params.output_region} "
         "--threads {threads} --output {params.prefix} > {log} 2>&1 && "
         "mv {params.prefix}_*.bin {output.bin}"
@@ -97,8 +97,8 @@ rule glimpse2_ligate:
         bcfs=phased_chunks,
         csis=phased_chunks_idx,
     output:
-        vcf="results/imputed/{chrom}.vcf.gz",
-        tbi="results/imputed/{chrom}.vcf.gz.tbi",
+        bcf="results/imputed/{chrom}.bcf",
+        csi="results/imputed/{chrom}.bcf.csi",
     log:
         "logs/glimpse2_ligate/{chrom}.log",
     conda:
@@ -112,6 +112,6 @@ rule glimpse2_ligate:
     shell:
         """
         printf '%s\n' {input.bcfs} > {params.listfile}
-        (GLIMPSE2_ligate --input {params.listfile} --output {output.vcf} --threads {threads} && \
-         tabix -p vcf {output.vcf}) > {log} 2>&1
+        (GLIMPSE2_ligate --input {params.listfile} --output {output.bcf} --threads {threads} && \
+         bcftools index -f {output.bcf} --threads {threads}) > {log} 2>&1
         """

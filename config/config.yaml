@@ -4,7 +4,7 @@ reference:
   fasta: "resources/reference/IRGSP-1.0.fa"
 
 panel:
-  vcf: "resources/panel/3kRG.phased.vcf.gz"
+  template: "resources/panel/3kRG.phased.{chrom}.vcf.gz"
 
 chromosomes:
   - "chr01"

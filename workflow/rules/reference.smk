@@ -39,40 +39,44 @@ rule samtools_faidx:
         "samtools faidx {input} > {log} 2>&1"
 
 
-rule panel_index:
+rule panel_convert:
     input:
-        PANEL_VCF,
+        PANEL_TEMPLATE,
     output:
-        f"{PANEL_VCF}.tbi",
+        bcf="results/panel/{chrom}.bcf",
+        csi="results/panel/{chrom}.bcf.csi",
     log:
-        "logs/reference/panel_index.log",
+        "logs/panel/convert_{chrom}.log",
     conda:
         "../envs/bcftools.yaml"
     cache: True
+    threads: 2
     resources:
         mem_mb=2000,
+        cpus_per_task=2,
     shell:
-        "tabix -p vcf {input} > {log} 2>&1"
+        # convert user-supplied per-chrom .vcf.gz to .bcf once; downstream consumes BCF only
+        "(bcftools view -Ob -o {output.bcf} --threads {threads} {input} && "
+        "bcftools index -f {output.bcf} --threads {threads}) > {log} 2>&1"
 
 
-rule split_panel:
+rule panel_sites:
     input:
-        vcf=PANEL_VCF,
-        tbi=f"{PANEL_VCF}.tbi",
+        bcf="results/panel/{chrom}.bcf",
+        csi="results/panel/{chrom}.bcf.csi",
     output:
-        vcf="results/panel/{chrom}.vcf.gz",
-        tbi="results/panel/{chrom}.vcf.gz.tbi",
+        bcf="results/panel/{chrom}.sites.bcf",
+        csi="results/panel/{chrom}.sites.bcf.csi",
     log:
-        "logs/panel/split_{chrom}.log",
+        "logs/panel/sites_{chrom}.log",
     conda:
         "../envs/bcftools.yaml"
     cache: True
-    threads: 4
+    threads: 2
     resources:
-        mem_mb=4000,
-        cpus_per_task=4,
-    params:
-        chrom=lambda wc: wc.chrom,
+        mem_mb=2000,
+        cpus_per_task=2,
     shell:
-        "(bcftools view -r {params.chrom} -Oz -o {output.vcf} --threads {threads} {input.vcf} && "
-        "tabix -p vcf {output.vcf}) > {log} 2>&1"
+        # sites-only BCF for GLIMPSE2_chunk (no GT — much faster to load)
+        "(bcftools view -G -Ob -o {output.bcf} --threads {threads} {input.bcf} && "
+        "bcftools index -f {output.bcf} --threads {threads}) > {log} 2>&1"

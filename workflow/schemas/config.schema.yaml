@@ -19,11 +19,11 @@ properties:
   panel:
     type: object
     properties:
-      vcf:
+      template:
         type: string
-        description: path to the phased reference panel VCF (whole genome, bgzipped)
+        description: per-chromosome phased panel path template, e.g. "resources/panel/{chrom}.vcf.gz"
     required:
-      - vcf
+      - template
 
   chromosomes:
     type: array

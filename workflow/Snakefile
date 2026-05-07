@@ -24,6 +24,6 @@ onerror:
 rule all:
     default_target: True
     input:
-        expand("results/imputed/{chrom}.vcf.gz", chrom=CHROMS),
-        expand("results/imputed/{chrom}.vcf.gz.tbi", chrom=CHROMS),
+        expand("results/imputed/{chrom}.bcf", chrom=CHROMS),
+        expand("results/imputed/{chrom}.bcf.csi", chrom=CHROMS),
         "results/multiqc/multiqc_report.html",
