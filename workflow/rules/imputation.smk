@@ -42,21 +42,15 @@ rule glimpse2_split_reference:
         runtime=120,
     params:
         prefix=lambda wc: f"results/refbin/{wc.chrom}/chunk_{wc.idx}",
+        input_region=lambda wc: get_chunk_region(wc, "input_region"),
+        output_region=lambda wc: get_chunk_region(wc, "output_region"),
     shell:
-        # GLIMPSE2_split_reference treats --output as a prefix and appends "_<chr>_<start>_<end>.bin".
-        # We rename the produced file back to the canonical {prefix}.bin so downstream rules can wildcard cleanly.
-        """
-        line=$(awk -v i={wildcards.idx} '$1==i' {input.chunks})
-        if [ -z "$line" ]; then echo "chunk {wildcards.idx} not found in {input.chunks}" >&2; exit 1; fi
-        in_region=$(echo "$line" | awk '{{print $3}}')
-        out_region=$(echo "$line" | awk '{{print $4}}')
-        GLIMPSE2_split_reference --reference {input.vcf} --map {input.gmap} \
-            --input-region $in_region --output-region $out_region \
-            --threads {threads} --output {params.prefix} > {log} 2>&1
-        produced=$(ls {params.prefix}_*.bin 2>/dev/null | head -1)
-        if [ -z "$produced" ]; then echo "GLIMPSE2_split_reference produced no .bin for chunk {wildcards.idx}" >&2; exit 1; fi
-        mv "$produced" {output.bin}
-        """
+        # GLIMPSE2_split_reference appends "_<chr>_<start>_<end>.bin" to --output;
+        # rename the single produced file to the canonical {prefix}.bin.
+        "GLIMPSE2_split_reference --reference {input.vcf} --map {input.gmap} "
+        "--input-region {params.input_region} --output-region {params.output_region} "
+        "--threads {threads} --output {params.prefix} > {log} 2>&1 && "
+        "mv {params.prefix}_*.bin {output.bin}"
 
 
 rule make_bam_list:

@@ -3,7 +3,6 @@ from pathlib import Path
 import pandas as pd
 from snakemake.utils import validate
 
-
 samples = (
     pd.read_csv(config["sample_sheet"], sep="\t", dtype=str)
     .set_index("sample", drop=False)
@@ -35,9 +34,7 @@ def get_trimmed_reads(wc):
 
 def get_read_group(wc):
     platform = samples.loc[wc.sample, "platform"]
-    return (
-        rf"@RG\tID:{wc.sample}\tSM:{wc.sample}\tLB:{wc.sample}\tPL:{platform}"
-    )
+    return rf"@RG\tID:{wc.sample}\tSM:{wc.sample}\tLB:{wc.sample}\tPL:{platform}"
 
 
 def get_map(wc):
@@ -52,31 +49,34 @@ def all_sample_bais():
     return [f"results/dedup/{s}.bam.bai" for s in SAMPLES]
 
 
+CHUNK_COLS = ["idx", "chrom", "input_region", "output_region", "length", "n_variants"]
+
+
 def read_chunks(chrom):
-    """Parse a GLIMPSE2_chunk output file into [(idx, input_region, output_region), ...]."""
-    path = Path(checkpoints.glimpse2_chunk.get(chrom=chrom).output[0])
-    out = []
-    with path.open() as fh:
-        for line in fh:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            fields = line.split()
-            # GLIMPSE2_chunk columns: idx chrom input_region output_region length n_variants
-            idx, _chrom, input_region, output_region = fields[0], fields[1], fields[2], fields[3]
-            out.append((idx, input_region, output_region))
-    return out
+    path = checkpoints.glimpse2_chunk.get(chrom=chrom).output[0]
+    df = pd.read_csv(
+        path, sep=r"\s+", header=None, comment="#", names=CHUNK_COLS, dtype=str
+    )
+    return df
+
+
+def get_chunk_region(wc, kind):
+    df = read_chunks(wc.chrom)
+    row = df.loc[df["idx"] == wc.idx]
+    if row.empty:
+        raise ValueError(f"chunk {wc.idx} not in chunks file for {wc.chrom}")
+    return row.iloc[0][kind]
 
 
 def phased_chunks(wc):
     return [
         f"results/phased/{wc.chrom}/chunk_{idx}.bcf"
-        for idx, _, _ in read_chunks(wc.chrom)
+        for idx in read_chunks(wc.chrom)["idx"]
     ]
 
 
 def phased_chunks_idx(wc):
     return [
         f"results/phased/{wc.chrom}/chunk_{idx}.bcf.csi"
-        for idx, _, _ in read_chunks(wc.chrom)
+        for idx in read_chunks(wc.chrom)["idx"]
     ]
