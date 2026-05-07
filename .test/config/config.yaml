@@ -1,0 +1,21 @@
+sample_sheet: "config/samples.tsv"
+
+reference:
+  fasta: "resources/reference/chr22.fa"
+
+panel:
+  vcf: "resources/panel/1000GP.chr22.noNA12878.vcf.gz"
+
+chromosomes:
+  - "chr22"
+
+genetic_map:
+  template: "resources/maps/{chrom}.gmap"
+
+glimpse2_chunk:
+  window_mb: 4.0
+  buffer_mb: 0.5
+  extra: ""
+
+fastp:
+  extra: ""

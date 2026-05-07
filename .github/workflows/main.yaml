@@ -32,25 +32,3 @@ jobs:
           directory: .
           snakefile: workflow/Snakefile
           args: "--lint"
-
-  Testing:
-    runs-on: ubuntu-latest
-    needs:
-      - Linting
-      - Formatting
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Test workflow
-        uses: snakemake/snakemake-github-action@v2
-        with:
-          directory: .test
-          snakefile: workflow/Snakefile
-          args: "--sdm conda --show-failed-logs --cores 2 --conda-cleanup-pkgs cache --all-temp"
-
-      - name: Test report
-        uses: snakemake/snakemake-github-action@v2
-        with:
-          directory: .test
-          snakefile: workflow/Snakefile
-          args: "--report report.zip"

@@ -9,6 +9,15 @@ platforms = ["linux-64"]
 snakemake = ">=8.20"
 snakemake-executor-plugin-slurm = "*"
 snakefmt = "*"
+conda = ">=26.3.2,<27"
+
+[feature.test.dependencies]
+bcftools = "*"
+samtools = "*"
+wget = "*"
+
+[environments]
+test = ["test"]
 
 [tasks]
 dry = "snakemake -n --cores 1"

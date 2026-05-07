@@ -4,4 +4,10 @@ logs/**
 .snakemake
 .snakemake/**
 .pixi/
-.test/results/*
+.test/data/
+.test/resources/
+.test/results/
+.test/logs/
+.test/.snakemake/
+.test/.pixi/
+.claude
