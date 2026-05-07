@@ -9,10 +9,10 @@ checkpoint glimpse2_chunk:
         "logs/glimpse2_chunk/{chrom}.log",
     conda:
         "../envs/glimpse2.yaml"
-    threads: 2
+    threads: 1
     resources:
-        mem_mb=4000,
-        cpus_per_task=2,
+        mem_mb=2000,
+        runtime=30,
     params:
         window_mb=config["glimpse2_chunk"]["window_mb"],
         buffer_mb=config["glimpse2_chunk"]["buffer_mb"],
@@ -65,6 +65,9 @@ rule make_bam_list:
         "logs/make_bam_list.log",
     conda:
         "../envs/bwa-mem2.yaml"
+    resources:
+        mem_mb=1000,
+        runtime=15,
     shell:
         "(for f in {input.bams}; do readlink -f $f; done > {output}) 2> {log}"
 
@@ -82,11 +85,11 @@ rule glimpse2_phase:
         "logs/glimpse2_phase/{chrom}_chunk_{idx}.log",
     conda:
         "../envs/glimpse2.yaml"
-    threads: config["glimpse2_phase"]["threads"]
+    threads: 8
     resources:
-        mem_mb=16000,
-        cpus_per_task=config["glimpse2_phase"]["threads"],
-        runtime=720,
+        mem_mb=32000,
+        cpus_per_task=8,
+        runtime=1440,
     shell:
         "(GLIMPSE2_phase --bam-list {input.bam_list} --reference {input.ref_bin} "
         "--threads {threads} --output {output.bcf} && "
@@ -104,10 +107,10 @@ rule glimpse2_ligate:
         "logs/glimpse2_ligate/{chrom}.log",
     conda:
         "../envs/glimpse2.yaml"
-    threads: 2
+    threads: 4
     resources:
         mem_mb=8000,
-        cpus_per_task=2,
+        cpus_per_task=4,
         runtime=240,
     params:
         listfile="results/phased/{chrom}/ligate.list",

@@ -12,8 +12,9 @@ rule fastqc_raw:
         "../envs/fastqc.yaml"
     threads: 2
     resources:
-        mem_mb=4000,
+        mem_mb=2000,
         cpus_per_task=2,
+        runtime=60,
     params:
         outdir=lambda wc, output: str(Path(output.r1_html).parent),
     shell:
@@ -40,10 +41,11 @@ rule fastp_trim:
         "logs/fastp/{sample}.log",
     conda:
         "../envs/fastp.yaml"
-    threads: config["fastp"]["threads"]
+    threads: 2
     resources:
-        mem_mb=4000,
-        cpus_per_task=config["fastp"]["threads"],
+        mem_mb=2000,
+        cpus_per_task=2,
+        runtime=120,
     params:
         extra=config["fastp"]["extra"],
     shell:

@@ -29,11 +29,4 @@ glimpse2_chunk:
   extra: ""
 
 fastp:
-  threads: 4
   extra: ""
-
-bwa_mem2:
-  threads: 8
-
-glimpse2_phase:
-  threads: 4

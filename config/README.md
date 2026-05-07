@@ -12,9 +12,9 @@
 | `glimpse2_chunk.window_mb` | GLIMPSE2_chunk `--window-mb` (default 4.0) |
 | `glimpse2_chunk.buffer_mb` | GLIMPSE2_chunk `--buffer-mb` (default 0.5) |
 | `glimpse2_chunk.extra` | Extra flags passed verbatim to GLIMPSE2_chunk |
-| `fastp.threads` | Threads per fastp job |
-| `bwa_mem2.threads` | Threads per bwa-mem2 mem job |
-| `glimpse2_phase.threads` | Threads per GLIMPSE2_phase job |
+| `fastp.extra` | Extra flags passed verbatim to fastp (e.g. quality cutoffs) |
+
+Threads/memory per rule are hard-coded in `workflow/rules/*.smk` (tuned for ~600 cores / ~5000 samples). Override by editing those `resources:` blocks.
 
 ## `samples.tsv`
 

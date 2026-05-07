@@ -60,26 +60,9 @@ properties:
   fastp:
     type: object
     properties:
-      threads:
-        type: integer
-        default: 4
       extra:
         type: string
         default: ""
-
-  bwa_mem2:
-    type: object
-    properties:
-      threads:
-        type: integer
-        default: 8
-
-  glimpse2_phase:
-    type: object
-    properties:
-      threads:
-        type: integer
-        default: 4
 
 required:
   - sample_sheet

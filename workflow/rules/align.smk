@@ -15,11 +15,11 @@ rule bwa_mem2_mem:
         "logs/bwa_mem2/{sample}.log",
     conda:
         "../envs/bwa-mem2.yaml"
-    threads: config["bwa_mem2"]["threads"]
+    threads: 4
     resources:
-        mem_mb=32000,
-        cpus_per_task=config["bwa_mem2"]["threads"],
-        runtime=720,
+        mem_mb=8000,
+        cpus_per_task=4,
+        runtime=360,
     params:
         rg=get_read_group,
         idx_prefix=lambda wc, input: input.idx[0].rsplit(".0123", 1)[0],
@@ -38,11 +38,11 @@ rule mark_duplicates:
         "logs/markdup/{sample}.log",
     conda:
         "../envs/bwa-mem2.yaml"
-    threads: 4
+    threads: 2
     resources:
-        mem_mb=8000,
-        cpus_per_task=4,
-        runtime=240,
+        mem_mb=4000,
+        cpus_per_task=2,
+        runtime=180,
     shell:
         # samtools markdup needs name-sorted -> fixmate -> coord-sorted -> markdup
         "(samtools collate -@ {threads} -O -u {input} | "
@@ -60,6 +60,9 @@ rule index_bam:
         "logs/index_bam/{sample}.log",
     conda:
         "../envs/bwa-mem2.yaml"
+    resources:
+        mem_mb=1000,
+        runtime=30,
     shell:
         "samtools index {input} > {log} 2>&1"
 
@@ -74,5 +77,8 @@ rule samtools_flagstat:
         "logs/flagstat/{sample}.log",
     conda:
         "../envs/bwa-mem2.yaml"
+    resources:
+        mem_mb=1000,
+        runtime=15,
     shell:
         "samtools flagstat {input.bam} > {output} 2> {log}"
