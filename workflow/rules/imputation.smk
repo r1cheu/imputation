@@ -43,7 +43,8 @@ rule glimpse2_split_reference:
     params:
         prefix=lambda wc: f"results/refbin/{wc.chrom}/chunk_{wc.idx}",
     shell:
-        # read the matching chunk row by id (column 1) and pass --input-region / --output-region
+        # GLIMPSE2_split_reference treats --output as a prefix and appends "_<chr>_<start>_<end>.bin".
+        # We rename the produced file back to the canonical {prefix}.bin so downstream rules can wildcard cleanly.
         """
         line=$(awk -v i={wildcards.idx} '$1==i' {input.chunks})
         if [ -z "$line" ]; then echo "chunk {wildcards.idx} not found in {input.chunks}" >&2; exit 1; fi
@@ -52,6 +53,9 @@ rule glimpse2_split_reference:
         GLIMPSE2_split_reference --reference {input.vcf} --map {input.gmap} \
             --input-region $in_region --output-region $out_region \
             --threads {threads} --output {params.prefix} > {log} 2>&1
+        produced=$(ls {params.prefix}_*.bin 2>/dev/null | head -1)
+        if [ -z "$produced" ]; then echo "GLIMPSE2_split_reference produced no .bin for chunk {wildcards.idx}" >&2; exit 1; fi
+        mv "$produced" {output.bin}
         """
 
 
