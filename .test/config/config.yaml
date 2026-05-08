@@ -4,7 +4,8 @@ reference:
   fasta: "resources/reference/chr22.fa"
 
 panel:
-  template: "resources/panel/1000GP.{chrom}.noNA12878.vcf.gz"
+  full_template: "resources/panel/1000GP.{chrom}.noNA12878.bcf"
+  sites_template: "resources/panel/1000GP.{chrom}.noNA12878.sites.vcf.gz"
 
 chromosomes:
   - "chr22"

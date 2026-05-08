@@ -34,11 +34,13 @@ PANEL_FILE=CCDG_14151_B01_GRM_WGS_2020-08-05_chr22.filtered.shapeit2-duohmm-phas
 $PIXI_RUN wget -q -c "$PANEL_BASE/$PANEL_FILE" -O resources/panel/raw.vcf.gz
 $PIXI_RUN wget -q -c "$PANEL_BASE/$PANEL_FILE.tbi" -O resources/panel/raw.vcf.gz.tbi
 
-echo "[6/6] Filter panel: biallelic SNPs, drop NA12878 family"
+echo "[6/6] Filter panel + emit full BCF (with .csi) and sites VCF (with .csi)"
 $PIXI_RUN bash -c '
   bcftools norm -m -any resources/panel/raw.vcf.gz -Ou --threads 4 |
-  bcftools view -m 2 -M 2 -v snps -s ^NA12878,NA12891,NA12892 --threads 4 -Oz -o resources/panel/1000GP.chr22.noNA12878.vcf.gz
-  tabix -p vcf -f resources/panel/1000GP.chr22.noNA12878.vcf.gz
+  bcftools view -m 2 -M 2 -v snps -s ^NA12878,NA12891,NA12892 --threads 4 -Ob -o resources/panel/1000GP.chr22.noNA12878.bcf
+  bcftools index -f resources/panel/1000GP.chr22.noNA12878.bcf
+  bcftools view -G resources/panel/1000GP.chr22.noNA12878.bcf -Oz -o resources/panel/1000GP.chr22.noNA12878.sites.vcf.gz
+  bcftools index -f resources/panel/1000GP.chr22.noNA12878.sites.vcf.gz
   rm -f resources/panel/raw.vcf.gz resources/panel/raw.vcf.gz.tbi
   rm -f resources/reference/chr22.fa.gz resources/maps/chr22.b38.gmap.gz
 '

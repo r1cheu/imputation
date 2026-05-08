@@ -1,7 +1,7 @@
 checkpoint glimpse2_chunk:
     input:
-        bcf="results/panel/{chrom}.sites.bcf",
-        csi="results/panel/{chrom}.sites.bcf.csi",
+        bcf=PANEL_SITES,
+        csi=f"{PANEL_SITES}.csi",
         gmap=get_map,
     output:
         "results/chunks/{chrom}.txt",
@@ -25,8 +25,8 @@ checkpoint glimpse2_chunk:
 
 rule glimpse2_split_reference:
     input:
-        bcf="results/panel/{chrom}.bcf",
-        csi="results/panel/{chrom}.bcf.csi",
+        bcf=PANEL_FULL,
+        csi=f"{PANEL_FULL}.csi",
         gmap=get_map,
         chunks="results/chunks/{chrom}.txt",
     output:

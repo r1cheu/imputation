@@ -16,7 +16,8 @@ CHROMS = config["chromosomes"]
 
 REF_FASTA = config["reference"]["fasta"]
 REF_PREFIX = REF_FASTA  # bwa-mem2 index prefix == fasta path
-PANEL_TEMPLATE = config["panel"]["template"]
+PANEL_FULL = config["panel"]["full_template"]
+PANEL_SITES = config["panel"]["sites_template"]
 MAP_TEMPLATE = config["genetic_map"]["template"]
 
 

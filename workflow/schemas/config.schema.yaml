@@ -19,11 +19,15 @@ properties:
   panel:
     type: object
     properties:
-      template:
+      full_template:
         type: string
-        description: per-chromosome phased panel path template, e.g. "resources/panel/{chrom}.vcf.gz"
+        description: per-chrom full-GT panel BCF template, e.g. "reference/panel_{chrom}.bcf"
+      sites_template:
+        type: string
+        description: per-chrom sites-only VCF/BCF template (with .csi/.tbi alongside)
     required:
-      - template
+      - full_template
+      - sites_template
 
   chromosomes:
     type: array

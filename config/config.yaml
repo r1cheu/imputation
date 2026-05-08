@@ -1,10 +1,11 @@
 sample_sheet: "config/samples.tsv"
 
 reference:
-  fasta: "resources/reference/IRGSP-1.0.fa"
+  fasta: "resources/reference/IRGSP-1.0_genome.fasta"
 
 panel:
-  template: "resources/panel/3kRG.phased.{chrom}.vcf.gz"
+  full_template: "resources/reference/hybrid_reference_{chrom}_addACAN.bcf"
+  sites_template: "resources/reference/hybrid_reference_{chrom}.sites.vcf.gz"
 
 chromosomes:
   - "chr01"
@@ -21,7 +22,7 @@ chromosomes:
   - "chr12"
 
 genetic_map:
-  template: "resources/maps/{chrom}.gmap"
+  template: "resources/map/rice_genetic_{chrom}.map"
 
 glimpse2_chunk:
   window_mb: 4.0

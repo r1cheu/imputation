@@ -1,3 +1,2 @@
 sample	platform	fq1	fq2
-RICE001	ILLUMINA	data/RICE001_1.fq.gz	data/RICE001_2.fq.gz
-RICE002	ILLUMINA	data/RICE002_1.fq.gz	data/RICE002_2.fq.gz
+SH01193	ILLUMINA	data/SH01193.R1.fq.gz	data/SH01193.R2.fq.gz

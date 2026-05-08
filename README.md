@@ -29,7 +29,8 @@ User-supplied resources (paths in `config/config.yaml`):
 | Item | Where to put it |
 |---|---|
 | Reference FASTA | `reference.fasta` |
-| Per-chromosome phased panel VCFs (bgzipped) | matching `panel.template` |
+| Per-chrom full-GT panel BCF + .csi | matching `panel.full_template` |
+| Per-chrom sites-only VCF + .csi | matching `panel.sites_template` |
 | Per-chromosome genetic maps in GLIMPSE2 format | matching `genetic_map.template` |
 | Per-sample paired-end FASTQ | listed in `config/samples.tsv` |
 
@@ -51,7 +52,6 @@ Reference- and panel-only rules are marked `cache: True` so their outputs can be
 shared across runs/projects:
 
 - `bwa_mem2_index`, `samtools_faidx`
-- `panel_convert`, `panel_sites`
 - `glimpse2_split_reference`
 
 `pixi.toml` defaults `SNAKEMAKE_OUTPUT_CACHE=.snakemake-cache`. To share the cache
