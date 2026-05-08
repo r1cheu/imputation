@@ -3,10 +3,9 @@ configfile: "config/config.yaml"
 
 include: "rules/common.smk"
 include: "rules/reference.smk"
-include: "rules/qc_trim.smk"
+include: "rules/trim.smk"
 include: "rules/align.smk"
 include: "rules/imputation.smk"
-include: "rules/multiqc.smk"
 
 
 onstart:
@@ -26,4 +25,3 @@ rule all:
     input:
         expand("results/imputed/{chrom}.bcf", chrom=CHROMS),
         expand("results/imputed/{chrom}.bcf.csi", chrom=CHROMS),
-        "results/multiqc/multiqc_report.html",

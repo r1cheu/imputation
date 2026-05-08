@@ -32,11 +32,12 @@ rule mark_duplicates:
         "results/mapped/{sample}.sorted.bam",
     output:
         bam="results/dedup/{sample}.bam",
-        stats="results/qc/dedup/{sample}.markdup.stats",
     log:
         "logs/markdup/{sample}.log",
     conda:
         "../envs/bwa-mem2.yaml"
+    group:
+        "post_align"
     threads: 2
     resources:
         mem_mb=4000,
@@ -46,7 +47,7 @@ rule mark_duplicates:
         "(samtools collate -@ {threads} -O -u {input} | "
         "samtools fixmate -@ {threads} -m -u - - | "
         "samtools sort -@ {threads} -u - | "
-        "samtools markdup -@ {threads} -f {output.stats} - {output.bam}) > {log} 2>&1"
+        "samtools markdup -@ {threads} - {output.bam}) > {log} 2>&1"
 
 
 rule index_bam:
@@ -58,23 +59,9 @@ rule index_bam:
         "logs/index_bam/{sample}.log",
     conda:
         "../envs/bwa-mem2.yaml"
+    group:
+        "post_align"
     resources:
         mem_mb=1000,
     shell:
         "samtools index {input} > {log} 2>&1"
-
-
-rule samtools_flagstat:
-    input:
-        bam="results/dedup/{sample}.bam",
-        bai="results/dedup/{sample}.bam.bai",
-    output:
-        "results/qc/flagstat/{sample}.flagstat",
-    log:
-        "logs/flagstat/{sample}.log",
-    conda:
-        "../envs/bwa-mem2.yaml"
-    resources:
-        mem_mb=1000,
-    shell:
-        "samtools flagstat {input.bam} > {output} 2> {log}"

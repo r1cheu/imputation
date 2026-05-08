@@ -8,7 +8,7 @@ A Snakemake workflow for genotype imputation of low-coverage rice sequencing dat
 ## Overview
 
 ```
-FASTQ ──▶ fastqc / fastp trim ──▶ bwa-mem2 mem ──▶ samtools sort + markdup ──▶ BAM
+FASTQ ──▶ fastp trim ──▶ bwa-mem2 mem ──▶ samtools sort + markdup ──▶ BAM
                                                                                 │
 phased panel VCF ──▶ split per-chrom ──▶ GLIMPSE2_chunk ──▶ split_reference     │
                                                                 │               │
@@ -69,8 +69,8 @@ pixi run run
 config/         user-facing config (config.yaml + samples.tsv)
 slurm/          snakemake-executor-plugin-slurm profile
 workflow/
-  Snakefile     main entry; rule all = per-chrom imputed VCF + multiqc report
-  rules/        common, reference, qc_trim, align, imputation, multiqc
+  Snakefile     main entry; rule all = per-chrom imputed VCF
+  rules/        common, reference, trim, align, imputation
   envs/         per-rule conda environments
   schemas/      config and sample-sheet JSON schemas
 pixi.toml       pixi project manifest

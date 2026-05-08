@@ -5,7 +5,7 @@ reference:
 
 panel:
   full_template: "resources/reference/hybrid_reference_{chrom}_addACAN.bcf"
-  sites_template: "resources/reference/hybrid_reference_{chrom}.sites.vcf.gz"
+  sites_template: "resources/reference/hybrid_reference_{chrom}.sites.bcf"
 
 chromosomes:
   - "chr01"

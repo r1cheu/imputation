@@ -3,8 +3,12 @@ jobs: 600
 
 printshellcmds: true
 software-deployment-method: conda
+# Node-local conda prefix; seed each compute node via scripts/seed_local_env.sh.
+# ParaStor metadata is too slow for conda activation on env directories
+# (observed ~5min cold/warm stat storms), so envs must live on local /tmp.
+conda-prefix: /tmp/zlgu/snakemake-conda
 max-jobs-per-second: 10
-latency-wait: 30
+latency-wait: 120
 max-status-checks-per-second: 5
 scheduler: greedy
 local-cores: 1
