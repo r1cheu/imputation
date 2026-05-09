@@ -1,21 +1,29 @@
-executor: "slurm"
-jobs: 600
-
-printshellcmds: true
-software-deployment-method: conda
-# Node-local conda prefix; seed each compute node via scripts/seed_local_env.sh.
-# ParaStor metadata is too slow for conda activation on env directories
-# (observed ~5min cold/warm stat storms), so envs must live on local /tmp.
-conda-prefix: /tmp/zlgu/snakemake-conda
-max-jobs-per-second: 10
-latency-wait: 120
-max-status-checks-per-second: 5
-scheduler: greedy
-local-cores: 1
+executor: cluster-generic
+cluster-generic-submit-cmd: >-
+  mkdir -p logs/{rule} &&
+  sbatch --parsable
+    --account={resources.slurm_account}
+    --partition={resources.slurm_partition}
+    --cpus-per-task={threads}
+    --mem={resources.mem_mb}M
+    --job-name=smk-{rule}-{wildcards}
+    --output=logs/{rule}/{rule}-{wildcards}-%j.out
+    --error=logs/{rule}/{rule}-{wildcards}-%j.err
+cluster-generic-status-cmd: bash slurm/status.sh
+cluster-generic-cancel-cmd: scancel
 
 default-resources:
   slurm_partition: "normal,fat"
   slurm_account: "rlchen"
   mem_mb: 2000
-  nodes: 1
-  cpus_per_task: 1
+
+jobs: 600
+restart-times: 3
+keep-going: True
+rerun-incomplete: True
+printshellcmds: True
+latency-wait: 60
+max-jobs-per-second: 10
+max-status-checks-per-second: 1
+scheduler: greedy
+local-cores: 1

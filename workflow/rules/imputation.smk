@@ -7,8 +7,6 @@ checkpoint glimpse2_chunk:
         "results/chunks/{chrom}.txt",
     log:
         "logs/glimpse2_chunk/{chrom}.log",
-    conda:
-        "../envs/glimpse2.yaml"
     threads: 1
     resources:
         mem_mb=2000,
@@ -33,13 +31,10 @@ rule glimpse2_split_reference:
         bin="results/refbin/{chrom}/chunk_{idx}.bin",
     log:
         "logs/glimpse2_split_reference/{chrom}_chunk_{idx}.log",
-    conda:
-        "../envs/glimpse2.yaml"
     cache: True
     threads: 2
     resources:
         mem_mb=8000,
-        cpus_per_task=2,
     params:
         prefix=lambda wc: f"results/refbin/{wc.chrom}/chunk_{wc.idx}",
         input_region=lambda wc: get_chunk_region(wc, "input_region"),
@@ -61,8 +56,6 @@ rule make_bam_list:
         "results/bam_list.txt",
     log:
         "logs/make_bam_list.log",
-    conda:
-        "../envs/bwa-mem2.yaml"
     resources:
         mem_mb=1000,
     shell:
@@ -80,12 +73,9 @@ rule glimpse2_phase:
         csi="results/phased/{chrom}/chunk_{idx}.bcf.csi",
     log:
         "logs/glimpse2_phase/{chrom}_chunk_{idx}.log",
-    conda:
-        "../envs/glimpse2.yaml"
     threads: 8
     resources:
         mem_mb=32000,
-        cpus_per_task=8,
     shell:
         "(GLIMPSE2_phase --bam-list {input.bam_list} --reference {input.ref_bin} "
         "--threads {threads} --output {output.bcf} && "
@@ -101,12 +91,9 @@ rule glimpse2_ligate:
         csi="results/imputed/{chrom}.bcf.csi",
     log:
         "logs/glimpse2_ligate/{chrom}.log",
-    conda:
-        "../envs/glimpse2.yaml"
     threads: 4
     resources:
         mem_mb=8000,
-        cpus_per_task=4,
     params:
         listfile="results/phased/{chrom}/ligate.list",
     shell:

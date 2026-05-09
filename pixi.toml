@@ -7,10 +7,12 @@ platforms = ["linux-64"]
 
 [dependencies]
 snakemake = ">=8.20"
-snakemake-executor-plugin-slurm = "*"
+snakemake-executor-plugin-cluster-generic = "*"
 snakefmt = "*"
 
 [activation.env]
+# Native bioinformatics binaries built by scripts/install_bins.sh.
+PATH = "$PIXI_PROJECT_ROOT/bin:$PATH"
 # Between-workflow output cache for reusable rules (bwa_mem2_index, samtools_faidx,
 # panel_index, split_panel, glimpse2_split_reference). Override to a shared path
 # (e.g. /shared/snakemake-cache) when reusing reference/panel across projects.

@@ -12,13 +12,10 @@ rule bwa_mem2_index:
         ),
     log:
         "logs/reference/bwa_mem2_index.log",
-    conda:
-        "../envs/bwa-mem2.yaml"
     cache: True
     threads: 8
     resources:
         mem_mb=32000,
-        cpus_per_task=8,
     shell:
         "bwa-mem2 index {input} > {log} 2>&1"
 
@@ -30,8 +27,6 @@ rule samtools_faidx:
         f"{REF_FASTA}.fai",
     log:
         "logs/reference/samtools_faidx.log",
-    conda:
-        "../envs/bwa-mem2.yaml"
     cache: True
     resources:
         mem_mb=2000,

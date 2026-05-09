@@ -10,8 +10,7 @@ environments:
       linux-64:
       - conda: https://conda.anaconda.org/bioconda/noarch/snakefmt-1.1.0-pyhdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/snakemake-9.20.0-hdfd78af_0.conda
-      - conda: https://conda.anaconda.org/bioconda/noarch/snakemake-executor-plugin-slurm-2.6.1-pyhdfd78af_0.conda
-      - conda: https://conda.anaconda.org/bioconda/noarch/snakemake-executor-plugin-slurm-jobstep-0.4.0-pyhdfd78af_0.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/snakemake-executor-plugin-cluster-generic-1.0.9-pyhdfd78af_0.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/noarch/snakemake-interface-common-1.23.0-pyh84498cf_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/snakemake-interface-executor-plugins-9.4.0-pyh84498cf_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/snakemake-interface-logger-plugins-2.0.1-pyh84498cf_0.conda
@@ -163,32 +162,17 @@ packages:
   license_family: MIT
   size: 11251
   timestamp: 1777722553260
-- conda: https://conda.anaconda.org/bioconda/noarch/snakemake-executor-plugin-slurm-2.6.1-pyhdfd78af_0.conda
-  sha256: b610bfb14a14138a1cd21601c67a6711f8dab934d27e60cf9846935ca61d6fc8
-  md5: cdc12c1fc327c33f65e1f6a1a27dbaef
-  depends:
-  - numpy >=1.26.4,<3.0
-  - pandas >=2.2.3,<3.0
-  - python >=3.11.0,<4.0.0
-  - pyyaml
-  - snakemake-executor-plugin-slurm-jobstep >=0.4.0,<0.5.0
-  - snakemake-interface-common >=1.21.0,<2.0.0
-  - snakemake-interface-executor-plugins >=9.3.9,<10.0.0
-  - throttler >=1.2.2,<2.0.0
-  license: MIT
-  license_family: MIT
-  size: 46932
-  timestamp: 1776413574557
-- conda: https://conda.anaconda.org/bioconda/noarch/snakemake-executor-plugin-slurm-jobstep-0.4.0-pyhdfd78af_0.conda
-  sha256: 82ad84bf106e0fbab62f6c001311aff53faefe323254c8b2b3540f310bb48dfe
-  md5: 7d4f2bf739967798eb4d8c02d59cf36c
+- conda: https://conda.anaconda.org/bioconda/noarch/snakemake-executor-plugin-cluster-generic-1.0.9-pyhdfd78af_0.tar.bz2
+  sha256: 38a9a779f242843e94fed34b0fbc0f9be0001f6bd322681c83146186fdd48da6
+  md5: 9b1db7127119f513696d620eefe7bf67
   depends:
   - python >=3.11.0,<4.0.0
   - snakemake-interface-common >=1.13.0,<2.0.0
   - snakemake-interface-executor-plugins >=9.0.0,<10.0.0
   license: MIT
-  size: 14678
-  timestamp: 1765807808315
+  license_family: MIT
+  size: 13919
+  timestamp: 1710194099964
 - conda: https://conda.anaconda.org/bioconda/noarch/snakemake-interface-common-1.23.0-pyh84498cf_0.conda
   sha256: e0304136ad68e797f0e9bc0d2adcedb3239d77a7363c7a5d708b8d7f1559be1e
   md5: 9e6c1430992f6fe49bc25030426f5969

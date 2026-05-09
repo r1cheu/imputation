@@ -13,12 +13,9 @@ rule bwa_mem2_mem:
         bam=temp("results/mapped/{sample}.sorted.bam"),
     log:
         "logs/bwa_mem2/{sample}.log",
-    conda:
-        "../envs/bwa-mem2.yaml"
     threads: 4
     resources:
         mem_mb=8000,
-        cpus_per_task=4,
     params:
         rg=get_read_group,
         idx_prefix=lambda wc, input: input.idx[0].rsplit(".0123", 1)[0],
@@ -34,14 +31,11 @@ rule mark_duplicates:
         bam="results/dedup/{sample}.bam",
     log:
         "logs/markdup/{sample}.log",
-    conda:
-        "../envs/bwa-mem2.yaml"
     group:
         "post_align"
     threads: 2
     resources:
         mem_mb=4000,
-        cpus_per_task=2,
     shell:
         # samtools markdup needs name-sorted -> fixmate -> coord-sorted -> markdup
         "(samtools collate -@ {threads} -O -u {input} | "
@@ -57,8 +51,6 @@ rule index_bam:
         "results/dedup/{sample}.bam.bai",
     log:
         "logs/index_bam/{sample}.log",
-    conda:
-        "../envs/bwa-mem2.yaml"
     group:
         "post_align"
     resources:

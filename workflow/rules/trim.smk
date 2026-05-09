@@ -6,12 +6,9 @@ rule fastp_trim:
         r2=temp("results/trimmed/{sample}.2.fq.gz"),
     log:
         "logs/fastp/{sample}.log",
-    conda:
-        "../envs/fastp.yaml"
-    threads: 2
+    threads: 8
     resources:
         mem_mb=4000,
-        cpus_per_task=8,
     params:
         extra=config["fastp"]["extra"],
     shell:
