@@ -13,9 +13,9 @@ rule bwa_mem2_index:
     log:
         "logs/reference/bwa_mem2_index.log",
     cache: True
-    threads: 8
+    threads: 1
     resources:
-        mem_mb=32000,
+        mem_mb=12000,
     shell:
         "bwa-mem2 index {input} > {log} 2>&1"
 
@@ -28,8 +28,9 @@ rule samtools_faidx:
     log:
         "logs/reference/samtools_faidx.log",
     cache: True
+    threads: 1
     resources:
-        mem_mb=2000,
+        mem_mb=500,
     shell:
         "samtools faidx {input} > {log} 2>&1"
 

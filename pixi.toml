@@ -7,7 +7,7 @@ platforms = ["linux-64"]
 
 [dependencies]
 snakemake = ">=8.20"
-snakemake-executor-plugin-cluster-generic = "*"
+snakemake-executor-plugin-slurm = "*"
 snakefmt = "*"
 
 [activation.env]
@@ -23,5 +23,5 @@ dry = "snakemake -n --cores 1 --cache"
 lint = "snakemake --lint"
 fmt = "snakefmt workflow/"
 run = "snakemake --profile slurm --cache"
-local = "snakemake --cores 8 --cache"
+local = "snakemake --cores 192 --cache"
 unlock = "snakemake --unlock"

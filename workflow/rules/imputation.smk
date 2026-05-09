@@ -32,9 +32,9 @@ rule glimpse2_split_reference:
     log:
         "logs/glimpse2_split_reference/{chrom}_chunk_{idx}.log",
     cache: True
-    threads: 2
+    threads: 8
     resources:
-        mem_mb=8000,
+        mem_mb=16000,
     params:
         prefix=lambda wc: f"results/refbin/{wc.chrom}/chunk_{wc.idx}",
         input_region=lambda wc: get_chunk_region(wc, "input_region"),
@@ -56,8 +56,9 @@ rule make_bam_list:
         "results/bam_list.txt",
     log:
         "logs/make_bam_list.log",
+    threads: 1
     resources:
-        mem_mb=1000,
+        mem_mb=500,
     shell:
         "(for f in {input.bams}; do readlink -f $f; done > {output}) 2> {log}"
 
@@ -73,7 +74,7 @@ rule glimpse2_phase:
         csi="results/phased/{chrom}/chunk_{idx}.bcf.csi",
     log:
         "logs/glimpse2_phase/{chrom}_chunk_{idx}.log",
-    threads: 8
+    threads: 16
     resources:
         mem_mb=32000,
     shell:

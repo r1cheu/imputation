@@ -13,9 +13,9 @@ rule bwa_mem2_mem:
         bam=temp("results/mapped/{sample}.sorted.bam"),
     log:
         "logs/bwa_mem2/{sample}.log",
-    threads: 4
+    threads: 16
     resources:
-        mem_mb=8000,
+        mem_mb=24000,
     params:
         rg=get_read_group,
         idx_prefix=lambda wc, input: input.idx[0].rsplit(".0123", 1)[0],
@@ -33,9 +33,9 @@ rule mark_duplicates:
         "logs/markdup/{sample}.log",
     group:
         "post_align"
-    threads: 2
+    threads: 8
     resources:
-        mem_mb=4000,
+        mem_mb=16000,
     shell:
         # samtools markdup needs name-sorted -> fixmate -> coord-sorted -> markdup
         "(samtools collate -@ {threads} -O -u {input} | "
@@ -53,7 +53,8 @@ rule index_bam:
         "logs/index_bam/{sample}.log",
     group:
         "post_align"
+    threads: 4
     resources:
-        mem_mb=1000,
+        mem_mb=2000,
     shell:
-        "samtools index {input} > {log} 2>&1"
+        "samtools index -@ {threads} {input} > {log} 2>&1"

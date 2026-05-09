@@ -1,23 +1,12 @@
-executor: cluster-generic
-cluster-generic-submit-cmd: >-
-  mkdir -p logs/{rule} &&
-  sbatch --parsable
-    --account={resources.slurm_account}
-    --partition={resources.slurm_partition}
-    --cpus-per-task={threads}
-    --mem={resources.mem_mb}M
-    --job-name=smk-{rule}-{wildcards}
-    --output=logs/{rule}/{rule}-{wildcards}-%j.out
-    --error=logs/{rule}/{rule}-{wildcards}-%j.err
-cluster-generic-status-cmd: bash slurm/status.sh
-cluster-generic-cancel-cmd: scancel
+executor: slurm
+jobs: 600
 
 default-resources:
   slurm_partition: "normal,fat"
   slurm_account: "rlchen"
-  mem_mb: 2000
+  mem_mb: 4000
+  runtime: 1440
 
-jobs: 600
 restart-times: 3
 keep-going: True
 rerun-incomplete: True
