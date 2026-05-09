@@ -9,17 +9,6 @@ platforms = ["linux-64"]
 snakemake = ">=8.20"
 snakemake-executor-plugin-slurm = "*"
 snakefmt = "*"
-conda = ">=26.3.2,<27"
-conda-pack = "*"
-zstd = "*"
-
-[feature.test.dependencies]
-bcftools = "*"
-samtools = "*"
-wget = "*"
-
-[environments]
-test = ["test"]
 
 [activation.env]
 # Between-workflow output cache for reusable rules (bwa_mem2_index, samtools_faidx,
@@ -31,11 +20,6 @@ SNAKEMAKE_OUTPUT_CACHE = "$PIXI_PROJECT_ROOT/.snakemake-cache"
 dry = "snakemake -n --cores 1 --cache"
 lint = "snakemake --lint"
 fmt = "snakefmt workflow/"
-envs = "snakemake --sdm conda --conda-create-envs-only --cores 1"
-run = "snakemake --profile slurm --sdm conda --cache"
-# run-local: launch from the relocated /tmp/$USER/pixi-default copy so that
-# sys.executable (and every sbatch worker) uses node-local python instead of
-# ParaStor. Requires scripts/build_local_envs.sh + scripts/distribute_envs.sh.
-run-local = "bash scripts/run_local.sh"
-local = "snakemake --sdm conda --cores 8 --cache"
+run = "snakemake --profile slurm --cache"
+local = "snakemake --cores 8 --cache"
 unlock = "snakemake --unlock"
