@@ -12,5 +12,6 @@ logs/**
 .test/.snakemake/
 .test/.pixi/
 .claude
+/bin/
 data
 reference
