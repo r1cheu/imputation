@@ -86,7 +86,7 @@ install_bwa_mem2() {
     mkdir -p "$d"
     tar -xjf "$src" -C "$d" --strip-components=1
     install -m755 "$d/bwa-mem2" "$BIN/bwa-mem2"
-    for variant in avx avx2 sse41 sse42; do
+    for variant in avx512bw avx2 avx sse42 sse41; do
         if [[ -f "$d/bwa-mem2.$variant" ]]; then
             install -m755 "$d/bwa-mem2.$variant" "$BIN/bwa-mem2.$variant"
         fi
