@@ -33,5 +33,3 @@ rule samtools_faidx:
         mem_mb=500,
     shell:
         "samtools faidx {input} > {log} 2>&1"
-
-

@@ -24,9 +24,9 @@ chromosomes:
 genetic_map:
   template: "resources/map/rice_genetic_{chrom}.map"
 
-glimpse2_chunk:
-  window_mb: 4.0
-  buffer_mb: 0.5
+glimpse_chunk:
+  window_size: 2000000
+  buffer_size: 200000
   extra: ""
 
 fastp:

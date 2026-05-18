@@ -42,19 +42,11 @@ def get_map(wc):
     return MAP_TEMPLATE.format(chrom=wc.chrom)
 
 
-def all_sample_bams():
-    return [f"results/dedup/{s}.bam" for s in SAMPLES]
-
-
-def all_sample_bais():
-    return [f"results/dedup/{s}.bam.bai" for s in SAMPLES]
-
-
 CHUNK_COLS = ["idx", "chrom", "input_region", "output_region"]
 
 
 def read_chunks(chrom):
-    path = checkpoints.glimpse2_chunk.get(chrom=chrom).output[0]
+    path = checkpoints.glimpse_chunk.get(chrom=chrom).output[0]
     df = pd.read_csv(
         path,
         sep=r"\s+",

@@ -6,6 +6,8 @@ rule fastp_trim:
         r2=temp("results/trimmed/{sample}.2.fq.gz"),
     log:
         "logs/fastp/{sample}.log",
+    benchmark:
+        "benchmarks/fastp/{sample}.tsv"
     threads: 8
     resources:
         mem_mb=4000,

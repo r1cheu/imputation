@@ -45,21 +45,21 @@ properties:
     required:
       - template
 
-  glimpse2_chunk:
+  glimpse_chunk:
     type: object
     properties:
-      window_mb:
-        type: number
-        default: 4.0
-      buffer_mb:
-        type: number
-        default: 0.5
+      window_size:
+        type: integer
+        default: 2000000
+      buffer_size:
+        type: integer
+        default: 200000
       extra:
         type: string
         default: ""
     required:
-      - window_mb
-      - buffer_mb
+      - window_size
+      - buffer_size
 
   fastp:
     type: object
@@ -74,4 +74,4 @@ required:
   - panel
   - chromosomes
   - genetic_map
-  - glimpse2_chunk
+  - glimpse_chunk

@@ -2,7 +2,7 @@
 # Install native bioinformatics binaries to <project>/bin without conda.
 #
 # Portability:
-#   - GLIMPSE2 / bwa-mem2 / fastp: official prebuilt static binaries.
+#   - bwa-mem2 / fastp: official prebuilt static binaries.
 #   - htslib / bcftools / samtools: built from source. htslib has runtime
 #     CPU dispatch (__builtin_cpu_supports + __attribute__((target))), so
 #     SIMD differences across nodes don't matter. The only portability axis
@@ -13,8 +13,11 @@
 #
 # Usage:
 #   bash scripts/install_bins.sh                # install all
-#   bash scripts/install_bins.sh glimpse2 fastp # install selected
+#   bash scripts/install_bins.sh bwa-mem2 fastp # install selected
 #   FORCE=1 bash scripts/install_bins.sh        # rebuild even if installed
+#
+# NOTE: GLIMPSE1 is not installed here -- it is pre-built on the cluster
+# and expected to be on PATH (GLIMPSE_chunk / GLIMPSE_phase / GLIMPSE_ligate).
 
 set -euo pipefail
 
@@ -24,9 +27,8 @@ CACHE="/tmp/${USER:-build}/imputation-bins"
 JOBS=${JOBS:-$(nproc 2>/dev/null || echo 4)}
 FORCE=${FORCE:-0}
 
-GLIMPSE2_VER=2.0.1
 BWA_MEM2_VER=2.3
-FASTP_VER=1.3.3
+FASTP_VER=0.23.4
 HTSLIB_VER=1.23.1
 BCFTOOLS_VER=1.23.1
 SAMTOOLS_VER=1.23.1
@@ -53,25 +55,7 @@ fetch() {
     mv "$out.part" "$out"
 }
 
-# ---------- 1. GLIMPSE2 (prebuilt static) ----------
-install_glimpse2() {
-    local ver=$GLIMPSE2_VER
-    local base="https://github.com/odelaneau/GLIMPSE/releases/download/v${ver}"
-    local tools=(GLIMPSE2_chunk GLIMPSE2_phase GLIMPSE2_ligate GLIMPSE2_concordance GLIMPSE2_split_reference)
-    local missing=()
-    for t in "${tools[@]}"; do need_install "$t" && missing+=("$t"); done
-    if (( ${#missing[@]} == 0 )); then ok "GLIMPSE2 $ver already installed"; return; fi
-
-    log "installing GLIMPSE2 $ver -> $BIN"
-    for t in "${missing[@]}"; do
-        local src="$CACHE/${t}_static-$ver"
-        fetch "$base/${t}_static" "$src"
-        install -m755 "$src" "$BIN/$t"
-        ok "$t"
-    done
-}
-
-# ---------- 2. bwa-mem2 (prebuilt with runtime SIMD dispatch) ----------
+# ---------- 1. bwa-mem2 (prebuilt with runtime SIMD dispatch) ----------
 install_bwa_mem2() {
     if ! need_install bwa-mem2; then ok "bwa-mem2 $BWA_MEM2_VER already installed"; return; fi
     local ver=$BWA_MEM2_VER
@@ -94,7 +78,7 @@ install_bwa_mem2() {
     ok "bwa-mem2 $ver"
 }
 
-# ---------- 3. fastp (fully static prebuilt) ----------
+# ---------- 2. fastp (fully static prebuilt) ----------
 install_fastp() {
     if ! need_install fastp; then ok "fastp $FASTP_VER already installed"; return; fi
     local ver=$FASTP_VER
@@ -128,7 +112,7 @@ build_htslib() {
     echo "$d"
 }
 
-# ---------- 4. bcftools ----------
+# ---------- 3. bcftools ----------
 install_bcftools() {
     if ! need_install bcftools; then ok "bcftools $BCFTOOLS_VER already installed"; return; fi
     local ver=$BCFTOOLS_VER
@@ -151,7 +135,7 @@ install_bcftools() {
     ok "bcftools $ver (+ tabix, bgzip)"
 }
 
-# ---------- 5. samtools ----------
+# ---------- 4. samtools ----------
 install_samtools() {
     if ! need_install samtools; then ok "samtools $SAMTOOLS_VER already installed"; return; fi
     local ver=$SAMTOOLS_VER
@@ -174,14 +158,13 @@ install_samtools() {
 
 # ---------- driver ----------
 declare -A INSTALLERS=(
-    [glimpse2]=install_glimpse2
     [bwa-mem2]=install_bwa_mem2
     [fastp]=install_fastp
     [bcftools]=install_bcftools
     [samtools]=install_samtools
 )
 
-ORDER=(glimpse2 bwa-mem2 fastp bcftools samtools)
+ORDER=(bwa-mem2 fastp bcftools samtools)
 
 if (( $# == 0 )); then
     targets=("${ORDER[@]}")

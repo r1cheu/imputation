@@ -1,4 +1,4 @@
-rule bwa_mem2_mem:
+rule bwa_align_dedup:
     input:
         reads=get_trimmed_reads,
         idx=multiext(
@@ -10,9 +10,12 @@ rule bwa_mem2_mem:
             ".pac",
         ),
     output:
-        bam=temp("results/mapped/{sample}.sorted.bam"),
+        bam="results/dedup/{sample}.bam",
+        bai="results/dedup/{sample}.bam.bai",
     log:
-        "logs/bwa_mem2/{sample}.log",
+        "logs/bwa_dedup/{sample}.log",
+    benchmark:
+        "benchmarks/bwa_dedup/{sample}.tsv"
     threads: 16
     resources:
         mem_mb=24000,
@@ -21,40 +24,6 @@ rule bwa_mem2_mem:
         idx_prefix=lambda wc, input: input.idx[0].rsplit(".0123", 1)[0],
     shell:
         "(bwa-mem2 mem -t {threads} -R '{params.rg}' {params.idx_prefix} {input.reads} | "
-        "samtools sort -@ {threads} -o {output.bam} -) > {log} 2>&1"
-
-
-rule mark_duplicates:
-    input:
-        "results/mapped/{sample}.sorted.bam",
-    output:
-        bam="results/dedup/{sample}.bam",
-    log:
-        "logs/markdup/{sample}.log",
-    group:
-        "post_align"
-    threads: 8
-    resources:
-        mem_mb=16000,
-    shell:
-        # samtools markdup needs name-sorted -> fixmate -> coord-sorted -> markdup
-        "(samtools collate -@ {threads} -O -u {input} | "
         "samtools fixmate -@ {threads} -m -u - - | "
-        "samtools sort -@ {threads} -u - | "
-        "samtools markdup -@ {threads} - {output.bam}) > {log} 2>&1"
-
-
-rule index_bam:
-    input:
-        "results/dedup/{sample}.bam",
-    output:
-        "results/dedup/{sample}.bam.bai",
-    log:
-        "logs/index_bam/{sample}.log",
-    group:
-        "post_align"
-    threads: 4
-    resources:
-        mem_mb=2000,
-    shell:
-        "samtools index -@ {threads} {input} > {log} 2>&1"
+        "samtools sort -@ {threads} -u -m 1G - | "
+        "samtools markdup -@ {threads} -r --write-index - {output.bam}) > {log} 2>&1"

@@ -1,4 +1,66 @@
-checkpoint glimpse2_chunk:
+rule panel_sites_tsv:
+    # GLIMPSE1 needs a tabixed TSV of "CHROM\tPOS\tREF,ALT" for `bcftools call -C alleles -T`.
+    input:
+        bcf=PANEL_SITES,
+        csi=f"{PANEL_SITES}.csi",
+    output:
+        tsv="results/sites/{chrom}.tsv.gz",
+        tbi="results/sites/{chrom}.tsv.gz.tbi",
+    log:
+        "logs/panel_sites_tsv/{chrom}.log",
+    threads: 1
+    resources:
+        mem_mb=1000,
+    shell:
+        "(bcftools query -r {wildcards.chrom} -f '%CHROM\\t%POS\\t%REF,%ALT\\n' {input.bcf} | "
+        "bgzip -c > {output.tsv} && "
+        "tabix -s1 -b2 -e2 {output.tsv}) > {log} 2>&1"
+
+
+rule compute_gl:
+    input:
+        bam="results/dedup/{sample}.bam",
+        bai="results/dedup/{sample}.bam.bai",
+        ref=REF_FASTA,
+        fai=f"{REF_FASTA}.fai",
+        sites_bcf=PANEL_SITES,
+        sites_csi=f"{PANEL_SITES}.csi",
+        sites_tsv="results/sites/{chrom}.tsv.gz",
+        sites_tbi="results/sites/{chrom}.tsv.gz.tbi",
+    output:
+        bcf="results/gl/{sample}/{chrom}.bcf",
+        csi="results/gl/{sample}/{chrom}.bcf.csi",
+    log:
+        "logs/compute_gl/{sample}_{chrom}.log",
+    threads: 2
+    resources:
+        mem_mb=4000,
+    shell:
+        "(bcftools mpileup -f {input.ref} -I -E -a 'FORMAT/DP' "
+        "-T {input.sites_bcf} -r {wildcards.chrom} {input.bam} -Ou | "
+        "bcftools call -Aim -C alleles -T {input.sites_tsv} -Ob -o {output.bcf} && "
+        "bcftools index -f {output.bcf}) > {log} 2>&1"
+
+
+rule merge_gl:
+    input:
+        bcfs=lambda wc: [f"results/gl/{s}/{wc.chrom}.bcf" for s in SAMPLES],
+        csis=lambda wc: [f"results/gl/{s}/{wc.chrom}.bcf.csi" for s in SAMPLES],
+    output:
+        bcf="results/gl_merged/{chrom}.bcf",
+        csi="results/gl_merged/{chrom}.bcf.csi",
+    log:
+        "logs/merge_gl/{chrom}.log",
+    threads: 4
+    resources:
+        mem_mb=4000,
+    shell:
+        "(bcftools merge -m none -r {wildcards.chrom} --threads {threads} "
+        "-Ob -o {output.bcf} {input.bcfs} && "
+        "bcftools index -f {output.bcf}) > {log} 2>&1"
+
+
+checkpoint glimpse_chunk:
     input:
         bcf=PANEL_SITES,
         csi=f"{PANEL_SITES}.csi",
@@ -6,84 +68,46 @@ checkpoint glimpse2_chunk:
     output:
         "results/chunks/{chrom}.txt",
     log:
-        "logs/glimpse2_chunk/{chrom}.log",
+        "logs/glimpse_chunk/{chrom}.log",
     threads: 1
     resources:
         mem_mb=2000,
     params:
-        chrom=lambda wc: wc.chrom,
-        window_mb=config["glimpse2_chunk"]["window_mb"],
-        buffer_mb=config["glimpse2_chunk"]["buffer_mb"],
-        extra=config["glimpse2_chunk"]["extra"],
+        window_size=config["glimpse_chunk"]["window_size"],
+        buffer_size=config["glimpse_chunk"]["buffer_size"],
+        extra=config["glimpse_chunk"]["extra"],
     shell:
-        "GLIMPSE2_chunk --input {input.bcf} --map {input.gmap} --region {params.chrom} "
-        "--window-mb {params.window_mb} --buffer-mb {params.buffer_mb} --sequential "
-        "--threads {threads} --output {output} {params.extra} > {log} 2>&1"
+        "GLIMPSE_chunk --input {input.bcf} --map {input.gmap} --region {wildcards.chrom} "
+        "--window-size {params.window_size} --buffer-size {params.buffer_size} "
+        "--thread {threads} --output {output} {params.extra} > {log} 2>&1"
 
 
-rule glimpse2_split_reference:
+rule glimpse_phase:
     input:
-        bcf=PANEL_FULL,
-        csi=f"{PANEL_FULL}.csi",
+        gl="results/gl_merged/{chrom}.bcf",
+        gl_csi="results/gl_merged/{chrom}.bcf.csi",
+        ref=PANEL_FULL,
+        ref_csi=f"{PANEL_FULL}.csi",
         gmap=get_map,
-        chunks="results/chunks/{chrom}.txt",
-    output:
-        bin="results/refbin/{chrom}/chunk_{idx}.bin",
-    log:
-        "logs/glimpse2_split_reference/{chrom}_chunk_{idx}.log",
-    cache: True
-    threads: 8
-    resources:
-        mem_mb=16000,
-    params:
-        prefix=lambda wc: f"results/refbin/{wc.chrom}/chunk_{wc.idx}",
-        input_region=lambda wc: get_chunk_region(wc, "input_region"),
-        output_region=lambda wc: get_chunk_region(wc, "output_region"),
-    shell:
-        # GLIMPSE2_split_reference appends "_<chr>_<start>_<end>.bin" to --output;
-        # rename the single produced file to the canonical {prefix}.bin.
-        "GLIMPSE2_split_reference --reference {input.bcf} --map {input.gmap} "
-        "--input-region {params.input_region} --output-region {params.output_region} "
-        "--threads {threads} --output {params.prefix} > {log} 2>&1 && "
-        "mv {params.prefix}_*.bin {output.bin}"
-
-
-rule make_bam_list:
-    input:
-        bams=all_sample_bams(),
-        bais=all_sample_bais(),
-    output:
-        "results/bam_list.txt",
-    log:
-        "logs/make_bam_list.log",
-    threads: 1
-    resources:
-        mem_mb=500,
-    shell:
-        "(for f in {input.bams}; do readlink -f $f; done > {output}) 2> {log}"
-
-
-rule glimpse2_phase:
-    input:
-        bam_list="results/bam_list.txt",
-        bams=all_sample_bams(),
-        bais=all_sample_bais(),
-        ref_bin="results/refbin/{chrom}/chunk_{idx}.bin",
     output:
         bcf="results/phased/{chrom}/chunk_{idx}.bcf",
         csi="results/phased/{chrom}/chunk_{idx}.bcf.csi",
     log:
-        "logs/glimpse2_phase/{chrom}_chunk_{idx}.log",
+        "logs/glimpse_phase/{chrom}_chunk_{idx}.log",
     threads: 16
     resources:
-        mem_mb=32000,
+        mem_mb=16000,
+    params:
+        input_region=lambda wc: get_chunk_region(wc, "input_region"),
+        output_region=lambda wc: get_chunk_region(wc, "output_region"),
     shell:
-        "(GLIMPSE2_phase --bam-list {input.bam_list} --reference {input.ref_bin} "
-        "--threads {threads} --output {output.bcf} && "
+        "(GLIMPSE_phase --input {input.gl} --reference {input.ref} --map {input.gmap} "
+        "--input-region {params.input_region} --output-region {params.output_region} "
+        "--thread {threads} --output {output.bcf} && "
         "bcftools index -f {output.bcf}) > {log} 2>&1"
 
 
-rule glimpse2_ligate:
+rule glimpse_ligate:
     input:
         bcfs=phased_chunks,
         csis=phased_chunks_idx,
@@ -91,7 +115,7 @@ rule glimpse2_ligate:
         bcf="results/imputed/{chrom}.bcf",
         csi="results/imputed/{chrom}.bcf.csi",
     log:
-        "logs/glimpse2_ligate/{chrom}.log",
+        "logs/glimpse_ligate/{chrom}.log",
     threads: 4
     resources:
         mem_mb=8000,
@@ -99,7 +123,7 @@ rule glimpse2_ligate:
         listfile="results/phased/{chrom}/ligate.list",
     shell:
         """
-        printf '%s\n' {input.bcfs} > {params.listfile}
-        (GLIMPSE2_ligate --input {params.listfile} --output {output.bcf} --threads {threads} && \
+        printf '%s\\n' {input.bcfs} > {params.listfile}
+        (GLIMPSE_ligate --input {params.listfile} --output {output.bcf} --thread {threads} && \
          bcftools index -f {output.bcf} --threads {threads}) > {log} 2>&1
         """

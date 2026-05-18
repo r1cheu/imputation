@@ -1,2 +1,3 @@
 sample	platform	fq1	fq2
 SH01193	ILLUMINA	data/SH01193.R1.fq.gz	data/SH01193.R2.fq.gz
+SH12345	ILLUMINA	data/SH12345.R1.fq.gz	data/SH12345.R2.fq.gz
