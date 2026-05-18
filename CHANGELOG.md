@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.0 (2026-05-18)
+
+
+### Features
+
+* enable between-workflow cache for reference/panel rules; drop runtime ([af2c0bb](https://github.com/r1cheu/imputation/commit/af2c0bb8b46f6825f16984f2f01f7dab45279f9b))
+* install_bins.sh to build native deps without conda (NFS-friendly) ([e4ba869](https://github.com/r1cheu/imputation/commit/e4ba869f8f872eb13e97b6f8809eae2e54d32dee))
+* scaffold low-coverage rice imputation pipeline with GLIMPSE2 ([c282d08](https://github.com/r1cheu/imputation/commit/c282d089d9ea65821eb9ac3741cb3db27d0dc16e))
+
+
+### Bug Fixes
+
+* add avx512 for bwa-mem2 ([0d0b4f5](https://github.com/r1cheu/imputation/commit/0d0b4f5c9b0da236885c8656720bebc8949d65fc))
+* read GLIMPSE2 chunks with usecols/index_col=False; cache via PIXI_PROJECT_ROOT ([2832bf6](https://github.com/r1cheu/imputation/commit/2832bf680272a1986af629b851d823fdc7d459af))
+* rename GLIMPSE2_split_reference output to canonical chunk_{idx}.bin ([b59d4f2](https://github.com/r1cheu/imputation/commit/b59d4f2cf4eb2bef171ffd755f21e23f4d9ae46c))
+
 ## [1.3.0](https://github.com/snakemake-workflows/snakemake-workflow-template/compare/v1.2.0...v1.3.0) (2026-03-27)
 
 
