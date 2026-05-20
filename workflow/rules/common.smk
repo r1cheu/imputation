@@ -18,6 +18,7 @@ REF_FASTA = config["reference"]["fasta"]
 REF_PREFIX = REF_FASTA  # bwa-mem2 index prefix == fasta path
 PANEL_FULL = config["panel"]["full_template"]
 PANEL_SITES = config["panel"]["sites_template"]
+PANEL_SITES_TSV = config["panel"]["sites_tsv_template"]
 MAP_TEMPLATE = config["genetic_map"]["template"]
 
 

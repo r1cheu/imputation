@@ -1,22 +1,3 @@
-rule panel_sites_tsv:
-    # GLIMPSE1 needs a tabixed TSV of "CHROM\tPOS\tREF,ALT" for `bcftools call -C alleles -T`.
-    input:
-        bcf=PANEL_SITES,
-        csi=f"{PANEL_SITES}.csi",
-    output:
-        tsv="results/sites/{chrom}.tsv.gz",
-        tbi="results/sites/{chrom}.tsv.gz.tbi",
-    log:
-        "logs/panel_sites_tsv/{chrom}.log",
-    threads: 1
-    resources:
-        mem_mb=1000,
-    shell:
-        "(bcftools query -r {wildcards.chrom} -f '%CHROM\\t%POS\\t%REF,%ALT\\n' {input.bcf} | "
-        "bgzip -c > {output.tsv} && "
-        "tabix -s1 -b2 -e2 {output.tsv}) > {log} 2>&1"
-
-
 rule compute_gl:
     input:
         bam="results/dedup/{sample}.bam",
@@ -25,8 +6,8 @@ rule compute_gl:
         fai=f"{REF_FASTA}.fai",
         sites_bcf=PANEL_SITES,
         sites_csi=f"{PANEL_SITES}.csi",
-        sites_tsv="results/sites/{chrom}.tsv.gz",
-        sites_tbi="results/sites/{chrom}.tsv.gz.tbi",
+        sites_tsv=PANEL_SITES_TSV,
+        sites_tbi=f"{PANEL_SITES_TSV}.tbi",
     output:
         bcf="results/gl/{sample}/{chrom}.bcf",
         csi="results/gl/{sample}/{chrom}.bcf.csi",

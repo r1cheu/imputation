@@ -25,9 +25,13 @@ properties:
       sites_template:
         type: string
         description: per-chrom sites-only VCF/BCF template (with .csi/.tbi alongside)
+      sites_tsv_template:
+        type: string
+        description: per-chrom sites TSV (CHROM\tPOS\tREF,ALT) bgzipped with .tbi alongside
     required:
       - full_template
       - sites_template
+      - sites_tsv_template
 
   chromosomes:
     type: array
