@@ -14,6 +14,12 @@ validate(config, schema="../schemas/config.schema.yaml")
 SAMPLES = samples.index.tolist()
 CHROMS = config["chromosomes"]
 
+
+wildcard_constraints:
+    sample="|".join(SAMPLES),
+    chrom="|".join(CHROMS),
+    idx=r"\d+",
+
 REF_FASTA = config["reference"]["fasta"]
 REF_PREFIX = REF_FASTA  # bwa-mem2 index prefix == fasta path
 PANEL_FULL = config["panel"]["full_template"]
