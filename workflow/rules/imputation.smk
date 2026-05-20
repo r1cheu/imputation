@@ -9,8 +9,8 @@ rule compute_gl:
         sites_tsv=PANEL_SITES_TSV,
         sites_tbi=f"{PANEL_SITES_TSV}.tbi",
     output:
-        bcf="results/gl/{sample}/{chrom}.bcf",
-        csi="results/gl/{sample}/{chrom}.bcf.csi",
+        bcf=temp("results/gl/{sample}/{chrom}.bcf"),
+        csi=temp("results/gl/{sample}/{chrom}.bcf.csi"),
     log:
         "logs/compute_gl/{sample}_{chrom}.log",
     threads: 2
@@ -71,8 +71,8 @@ rule glimpse_phase:
         ref_csi=f"{PANEL_FULL}.csi",
         gmap=get_map,
     output:
-        bcf="results/phased/{chrom}/chunk_{idx}.bcf",
-        csi="results/phased/{chrom}/chunk_{idx}.bcf.csi",
+        bcf=temp("results/phased/{chrom}/chunk_{idx}.bcf"),
+        csi=temp("results/phased/{chrom}/chunk_{idx}.bcf.csi"),
     log:
         "logs/glimpse_phase/{chrom}_chunk_{idx}.log",
     threads: 16
