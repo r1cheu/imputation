@@ -5,7 +5,6 @@ reference:
 
 panel:
   full_template: "resources/reference/hybrid_reference_{chrom}_addACAN.bcf"
-  sites_template: "resources/reference/hybrid_reference_{chrom}.sites.bcf"
   sites_tsv_template: "resources/reference/hybrid_reference_{chrom}.sites.tsv.gz"
 
 chromosomes:

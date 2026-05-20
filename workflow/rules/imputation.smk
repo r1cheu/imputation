@@ -4,8 +4,8 @@ rule compute_gl:
         bai="results/dedup/{sample}.bam.bai",
         ref=REF_FASTA,
         fai=f"{REF_FASTA}.fai",
-        sites_bcf=PANEL_SITES,
-        sites_csi=f"{PANEL_SITES}.csi",
+        panel=PANEL_FULL,
+        panel_csi=f"{PANEL_FULL}.csi",
         sites_tsv=PANEL_SITES_TSV,
         sites_tbi=f"{PANEL_SITES_TSV}.tbi",
     output:
@@ -18,7 +18,7 @@ rule compute_gl:
         mem_mb=4000,
     shell:
         "(bcftools mpileup -f {input.ref} -I -E -a 'FORMAT/DP' "
-        "-T {input.sites_bcf} -r {wildcards.chrom} {input.bam} -Ou | "
+        "-T {input.panel} -r {wildcards.chrom} {input.bam} -Ou | "
         "bcftools call -Aim -C alleles -T {input.sites_tsv} -Ob -o {output.bcf} && "
         "bcftools index -f {output.bcf}) > {log} 2>&1"
 
@@ -43,8 +43,8 @@ rule merge_gl:
 
 checkpoint glimpse_chunk:
     input:
-        bcf=PANEL_SITES,
-        csi=f"{PANEL_SITES}.csi",
+        bcf=PANEL_FULL,
+        csi=f"{PANEL_FULL}.csi",
         gmap=get_map,
     output:
         "results/chunks/{chrom}.txt",
