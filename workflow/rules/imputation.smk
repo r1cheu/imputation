@@ -23,10 +23,27 @@ rule compute_gl:
         "bcftools index -f {output.bcf}) > {log} 2>&1"
 
 
+rule concat_gl:
+    input:
+        bcfs=expand("results/gl/{{sample}}/{chrom}.bcf", chrom=CHROMS),
+        csis=expand("results/gl/{{sample}}/{chrom}.bcf.csi", chrom=CHROMS),
+    output:
+        bcf="results/gl/{sample}.bcf",
+        csi="results/gl/{sample}.bcf.csi",
+    log:
+        "logs/concat_gl/{sample}.log",
+    threads: 2
+    resources:
+        mem_mb=2000,
+    shell:
+        "(bcftools concat --threads {threads} -Ob -o {output.bcf} {input.bcfs} && "
+        "bcftools index -f --threads {threads} {output.bcf}) > {log} 2>&1"
+
+
 rule merge_gl:
     input:
-        bcfs=lambda wc: [f"results/gl/{s}/{wc.chrom}.bcf" for s in SAMPLES],
-        csis=lambda wc: [f"results/gl/{s}/{wc.chrom}.bcf.csi" for s in SAMPLES],
+        bcfs=lambda wc: [f"results/gl/{s}.bcf" for s in SAMPLES],
+        csis=lambda wc: [f"results/gl/{s}.bcf.csi" for s in SAMPLES],
     output:
         bcf="results/gl_merged/{chrom}.bcf",
         csi="results/gl_merged/{chrom}.bcf.csi",
@@ -108,3 +125,20 @@ rule glimpse_ligate:
         (GLIMPSE_ligate --input {params.listfile} --output {output.bcf} --thread {threads} && \
          bcftools index -f {output.bcf} --threads {threads}) > {log} 2>&1
         """
+
+
+rule concat_imputed:
+    input:
+        bcfs=expand("results/imputed/{chrom}.bcf", chrom=CHROMS),
+        csis=expand("results/imputed/{chrom}.bcf.csi", chrom=CHROMS),
+    output:
+        bcf="results/imputed/all.bcf",
+        csi="results/imputed/all.bcf.csi",
+    log:
+        "logs/concat_imputed/all.log",
+    threads: 4
+    resources:
+        mem_mb=8000,
+    shell:
+        "(bcftools concat --threads {threads} -Ob -o {output.bcf} {input.bcfs} && "
+        "bcftools index -f --threads {threads} {output.bcf}) > {log} 2>&1"

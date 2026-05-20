@@ -23,5 +23,5 @@ onerror:
 rule all:
     default_target: True
     input:
-        expand("results/imputed/{chrom}.bcf", chrom=CHROMS),
-        expand("results/imputed/{chrom}.bcf.csi", chrom=CHROMS),
+        "results/imputed/all.bcf",
+        "results/imputed/all.bcf.csi",
