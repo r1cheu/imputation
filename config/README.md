@@ -1,20 +1,29 @@
 # Configuration
 
-## `config.yaml`
+## Bash runner: `pipeline.env`
 
 | Key | Meaning |
 |---|---|
-| `sample_sheet` | TSV listing samples (see below) |
-| `reference.fasta` | Reference genome FASTA (e.g. IRGSP-1.0). Indices are built by the workflow. |
-| `panel.vcf` | Whole-genome phased reference panel VCF, bgzipped. Will be split per chromosome. |
-| `chromosomes` | List of chromosome names. Must match both reference and panel. |
-| `genetic_map.template` | Per-chromosome genetic map path template, e.g. `resources/maps/{chrom}.gmap`. Format expected by GLIMPSE2: `pos chr cM`. |
-| `glimpse2_chunk.window_mb` | GLIMPSE2_chunk `--window-mb` (default 4.0) |
-| `glimpse2_chunk.buffer_mb` | GLIMPSE2_chunk `--buffer-mb` (default 0.5) |
-| `glimpse2_chunk.extra` | Extra flags passed verbatim to GLIMPSE2_chunk |
-| `fastp.extra` | Extra flags passed verbatim to fastp (e.g. quality cutoffs) |
+| `SAMPLE_SHEET` | TSV listing samples (see below) |
+| `REFERENCE_FASTA` | Reference genome FASTA. `bwa-mem2 index` and `samtools faidx` are run by the pipeline. |
+| `PANEL_FULL_TEMPLATE` | Per-chrom full-GT panel BCF template. Use `{chrom}` for the chromosome placeholder. |
+| `PANEL_SITES_TSV_TEMPLATE` | Per-chrom sites TSV template, bgzipped with `.tbi` alongside. Use `{chrom}` for the chromosome placeholder. |
+| `MAP_TEMPLATE` | Per-chromosome genetic map template. Use `{chrom}` for the chromosome placeholder. |
+| `CHROMS` | Bash array of chromosome names. Must match reference, panel, sites, and map files. |
+| `FASTP_EXTRA` | Extra flags passed verbatim to `fastp`. |
+| `GLIMPSE_CHUNK_WINDOW_SIZE` | `GLIMPSE_chunk --window-size`. |
+| `GLIMPSE_CHUNK_BUFFER_SIZE` | `GLIMPSE_chunk --buffer-size`. |
+| `GLIMPSE_CHUNK_EXTRA` | Extra flags passed verbatim to `GLIMPSE_chunk`. |
+| `SLURM_ACCOUNT` | Account passed to `sbatch --account`. |
+| `SLURM_PARTITION` | Partition passed to `sbatch --partition`. |
+| `*_CPUS`, `*_MEM`, `*_TIME` | Per-stage SLURM resources. |
+| `*_ARRAY_LIMIT` | Per-stage maximum simultaneous SLURM array tasks. |
 
-Threads/memory per rule are hard-coded in `workflow/rules/*.smk` (tuned for ~600 cores / ~5000 samples). Override by editing those `resources:` blocks.
+Run with:
+
+```bash
+bash scripts/submit_pipeline.sh config/pipeline.env
+```
 
 ## `samples.tsv`
 
@@ -26,3 +35,11 @@ Tab-separated, one sample per row.
 | `platform` | yes | sequencing platform string (RG PL), e.g. `ILLUMINA` |
 | `fq1` | yes | path to read 1 fastq.gz |
 | `fq2` | yes | path to read 2 fastq.gz |
+
+Rows are sorted by `sample` before submission, matching the legacy Snakemake
+workflow behavior.
+
+## Legacy Snakemake config
+
+`config/config.yaml` is still used by the old Snakemake workflow under
+`workflow/`. It is not read by the bash/SLURM runner.

@@ -1,79 +1,88 @@
-# Snakemake workflow: rice imputation
+# Rice imputation pipeline
 
-[![Snakemake](https://img.shields.io/badge/snakemake-%E2%89%A58.20-brightgreen.svg)](https://snakemake.github.io)
-[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
+A bash/SLURM pipeline for genotype imputation of low-coverage rice sequencing data.
 
-A Snakemake workflow for genotype imputation of low-coverage rice sequencing data using **GLIMPSE2**.
+The old Snakemake workflow is still kept under `workflow/` for comparison and
+fallback, but the recommended HPC entry point is now the bash runner in
+`scripts/`.
 
 ## Overview
 
 ```
-FASTQ ──▶ fastp trim ──▶ bwa-mem2 mem ──▶ samtools sort + markdup ──▶ BAM
-                                                                                │
-phased panel VCF ──▶ split per-chrom ──▶ GLIMPSE2_chunk ──▶ split_reference     │
-                                                                │               │
-                                                                └──▶ GLIMPSE2_phase (--bam-list)
-                                                                              │
-                                                                              ▼
-                                                              GLIMPSE2_ligate ──▶ per-chrom VCF
+FASTQ -> fastp trim -> bwa-mem2 mem -> samtools fixmate/sort/markdup -> BAM
+                                                                           |
+panel BCF + maps -> GLIMPSE_chunk                                          |
+                                                                           v
+BAM -> genotype likelihoods -> merged per-chrom GL -> GLIMPSE_phase -> GLIMPSE_ligate -> all.bcf
 ```
 
 ## Requirements
 
-- Linux + [pixi](https://pixi.sh) (manages snakemake itself)
-- conda / mamba (auto-managed by snakemake `--sdm conda`)
-- A SLURM cluster (optional; local execution also works)
+- Linux with bash and a SLURM cluster
+- `sbatch`
+- `fastp`, `bwa-mem2`, `samtools`, `bcftools`
+- `GLIMPSE_chunk`, `GLIMPSE_phase`, `GLIMPSE_ligate`
 
-User-supplied resources (paths in `config/config.yaml`):
+`scripts/install_bins.sh` can install the native binaries into `bin/`:
+
+```bash
+bash scripts/install_bins.sh
+export PATH="$PWD/bin:$PATH"
+```
+
+GLIMPSE is expected to already be available on the cluster `PATH`.
+
+User-supplied resources (paths in `config/pipeline.env`):
 
 | Item | Where to put it |
 |---|---|
-| Reference FASTA | `reference.fasta` |
-| Per-chrom full-GT panel BCF + .csi | matching `panel.full_template` |
-| Per-chrom sites-only VCF + .csi | matching `panel.sites_template` |
-| Per-chromosome genetic maps in GLIMPSE2 format | matching `genetic_map.template` |
+| Reference FASTA | `REFERENCE_FASTA` in `config/pipeline.env` |
+| Per-chrom full-GT panel BCF + .csi | matching `PANEL_FULL_TEMPLATE` |
+| Per-chrom sites TSV + .tbi | matching `PANEL_SITES_TSV_TEMPLATE` |
+| Per-chromosome genetic maps | matching `MAP_TEMPLATE` |
 | Per-sample paired-end FASTQ | listed in `config/samples.tsv` |
 
 ## Usage
 
 ```bash
-pixi install                       # install snakemake + slurm plugin into .pixi/
-pixi run envs                      # pre-create per-rule conda envs (optional)
-pixi run dry                       # dry-run
-pixi run local                     # local execution with 8 cores
-pixi run run                       # SLURM submission via slurm/config.yaml
+bash scripts/submit_pipeline.sh config/pipeline.env
 ```
 
-See `config/README.md` for the configuration reference.
+The submit script creates the SLURM dependency chain and prints the submitted
+job ids. Dynamic GLIMPSE phase jobs are submitted by a continuation job after
+all chunk files are available.
 
-### Between-workflow caching
+The bash runner skips stages whose final outputs already exist, so rerunning the
+same command resumes from the missing or failed outputs.
 
-Reference- and panel-only rules are marked `cache: True` so their outputs can be
-shared across runs/projects:
+## Configuration
 
-- `bwa_mem2_index`, `samtools_faidx`
-- `glimpse2_split_reference`
+- Edit `config/pipeline.env` for paths, chromosomes, GLIMPSE/fastp options, and
+  SLURM resource settings.
+- Edit `config/samples.tsv` for sample ids, platform strings, and FASTQ paths.
+- See `config/README.md` for the field reference.
 
-`pixi.toml` defaults `SNAKEMAKE_OUTPUT_CACHE=.snakemake-cache`. To share the cache
-across projects (recommended for a fixed reference + panel), set it to a shared
-path before invoking pixi tasks:
+## Snakemake fallback
+
+The original Snakemake workflow remains available:
 
 ```bash
-export SNAKEMAKE_OUTPUT_CACHE=/shared/snakemake-cache
 pixi run run
 ```
+
+Use this only when you want to compare behavior with the previous workflow.
 
 ## Layout
 
 ```
 config/         user-facing config (config.yaml + samples.tsv)
-slurm/          snakemake-executor-plugin-slurm profile
+scripts/        bash/SLURM runner and native binary installer
+slurm/          legacy snakemake-executor-plugin-slurm profile
 workflow/
-  Snakefile     main entry; rule all = per-chrom imputed VCF
-  rules/        common, reference, trim, align, imputation
-  envs/         per-rule conda environments
+  Snakefile     legacy Snakemake entry
+  rules/        legacy Snakemake rules
   schemas/      config and sample-sheet JSON schemas
-pixi.toml       pixi project manifest
+pixi.toml       legacy Snakemake/pixi project manifest
 ```
 
 ## References
