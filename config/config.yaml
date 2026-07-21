@@ -4,8 +4,8 @@ reference:
   fasta: "resources/reference/IRGSP-1.0_genome.fasta"
 
 panel:
-  full_template: "resources/reference/hybrid_reference_{chrom}_addACAN.bcf"
-  sites_tsv_template: "resources/reference/hybrid_reference_{chrom}.sites.tsv.gz"
+  full_template: "resources/ref_panel/311/{chrom}.vcf.gz"
+  sites_tsv_template: "resources/ref_panel/311/{chrom}.tsv.gz"
 
 chromosomes:
   - "chr01"
@@ -22,7 +22,10 @@ chromosomes:
   - "chr12"
 
 genetic_map:
-  template: "resources/map/rice_genetic_{chrom}.map"
+  template: "resources/map/{chrom}.map"
+
+merge_gl:
+  batch_size: 200
 
 glimpse_chunk:
   window_size: 2000000

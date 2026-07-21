@@ -45,6 +45,15 @@ properties:
     required:
       - template
 
+  merge_gl:
+    type: object
+    properties:
+      batch_size:
+        type: integer
+        default: 400
+        minimum: 1
+        description: maximum number of sample GL BCFs merged in one bcftools merge job
+
   glimpse_chunk:
     type: object
     properties:

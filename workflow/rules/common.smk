@@ -13,12 +13,17 @@ validate(config, schema="../schemas/config.schema.yaml")
 
 SAMPLES = samples.index.tolist()
 CHROMS = config["chromosomes"]
+MERGE_GL_BATCH_SIZE = int(config.get("merge_gl", {}).get("batch_size", 400))
+MERGE_GL_BATCHES = [
+    f"{i:04d}" for i in range((len(SAMPLES) + MERGE_GL_BATCH_SIZE - 1) // MERGE_GL_BATCH_SIZE)
+]
 
 
 wildcard_constraints:
     sample="|".join(SAMPLES),
     chrom="|".join(CHROMS),
     idx=r"\d+",
+    batch=r"\d+",
 
 REF_FASTA = config["reference"]["fasta"]
 REF_PREFIX = REF_FASTA  # bwa-mem2 index prefix == fasta path
@@ -46,6 +51,21 @@ def get_read_group(wc):
 
 def get_map(wc):
     return MAP_TEMPLATE.format(chrom=wc.chrom)
+
+
+def merge_gl_batch_samples(wc):
+    batch = int(wc.batch)
+    start = batch * MERGE_GL_BATCH_SIZE
+    end = start + MERGE_GL_BATCH_SIZE
+    return SAMPLES[start:end]
+
+
+def merge_gl_batch_bcfs(wc):
+    return [f"results/gl/{sample}.bcf" for sample in merge_gl_batch_samples(wc)]
+
+
+def merge_gl_batch_csis(wc):
+    return [f"results/gl/{sample}.bcf.csi" for sample in merge_gl_batch_samples(wc)]
 
 
 CHUNK_COLS = ["idx", "chrom", "input_region", "output_region"]

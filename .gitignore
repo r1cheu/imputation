@@ -17,3 +17,6 @@ data
 reference
 benchmarks
 benchmarks_back
+bin
+resources
+.snakemake-db

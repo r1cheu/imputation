@@ -1,5 +1,5 @@
 executor: slurm
-jobs: 600
+jobs: 200
 
 default-resources:
   slurm_partition: "normal,fat"
@@ -7,10 +7,9 @@ default-resources:
   mem_mb: 4000
   runtime: 1440
 
-restart-times: 3
+restart-times: 1
 keep-going: True
 rerun-incomplete: True
-printshellcmds: True
 latency-wait: 60
 max-jobs-per-second: 10
 max-status-checks-per-second: 1

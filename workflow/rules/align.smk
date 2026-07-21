@@ -26,4 +26,4 @@ rule bwa_align_dedup:
         "(bwa-mem2 mem -t {threads} -R '{params.rg}' {params.idx_prefix} {input.reads} | "
         "samtools fixmate -@ {threads} -m -u - - | "
         "samtools sort -@ {threads} -u -m 1G - | "
-        "samtools markdup -@ {threads} -r --write-index - {output.bam}) > {log} 2>&1"
+        "samtools markdup -@ {threads} -r --write-index - {output.bam}##idx##{output.bai}) > {log} 2>&1"

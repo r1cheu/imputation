@@ -13,7 +13,7 @@ rule compute_gl:
         csi=temp("results/gl/{sample}/{chrom}.bcf.csi"),
     log:
         "logs/compute_gl/{sample}_{chrom}.log",
-    threads: 2
+    threads: 1
     resources:
         mem_mb=4000,
     shell:
@@ -32,7 +32,7 @@ rule concat_gl:
         csi="results/gl/{sample}.bcf.csi",
     log:
         "logs/concat_gl/{sample}.log",
-    threads: 2
+    threads: 1
     resources:
         mem_mb=2000,
     shell:
@@ -40,22 +40,50 @@ rule concat_gl:
         "bcftools index -f --threads {threads} {output.bcf}) > {log} 2>&1"
 
 
+rule merge_gl_batch:
+    input:
+        bcfs=merge_gl_batch_bcfs,
+        csis=merge_gl_batch_csis,
+    output:
+        bcf=temp("results/gl_merged_batches/{chrom}/batch_{batch}.bcf"),
+        csi=temp("results/gl_merged_batches/{chrom}/batch_{batch}.bcf.csi"),
+    log:
+        "logs/merge_gl_batch/{chrom}_batch_{batch}.log",
+    threads: 2
+    resources:
+        mem_mb=4000,
+    params:
+        listfile="results/gl_merged_batches/{chrom}/batch_{batch}.list",
+    shell:
+        """
+        printf '%s\\n' {input.bcfs} > {params.listfile}
+        (bcftools merge -m none -r {wildcards.chrom} --threads {threads} \
+            -Ob -o {output.bcf} -l {params.listfile} && \
+         bcftools index -f --threads {threads} {output.bcf}) > {log} 2>&1
+        """
+
+
 rule merge_gl:
     input:
-        bcfs=lambda wc: [f"results/gl/{s}.bcf" for s in SAMPLES],
-        csis=lambda wc: [f"results/gl/{s}.bcf.csi" for s in SAMPLES],
+        bcfs=expand("results/gl_merged_batches/{{chrom}}/batch_{batch}.bcf", batch=MERGE_GL_BATCHES),
+        csis=expand("results/gl_merged_batches/{{chrom}}/batch_{batch}.bcf.csi", batch=MERGE_GL_BATCHES),
     output:
         bcf="results/gl_merged/{chrom}.bcf",
         csi="results/gl_merged/{chrom}.bcf.csi",
     log:
         "logs/merge_gl/{chrom}.log",
-    threads: 4
+    threads: 8
     resources:
         mem_mb=4000,
+    params:
+        listfile="results/gl_merged/{chrom}.list",
     shell:
-        "(bcftools merge -m none -r {wildcards.chrom} --threads {threads} "
-        "-Ob -o {output.bcf} {input.bcfs} && "
-        "bcftools index -f {output.bcf}) > {log} 2>&1"
+        """
+        printf '%s\\n' {input.bcfs} > {params.listfile}
+        (bcftools merge -m none -r {wildcards.chrom} --threads {threads} \
+            -Ob -o {output.bcf} -l {params.listfile} && \
+         bcftools index -f --threads {threads} {output.bcf}) > {log} 2>&1
+        """
 
 
 checkpoint glimpse_chunk:
@@ -92,7 +120,7 @@ rule glimpse_phase:
         csi=temp("results/phased/{chrom}/chunk_{idx}.bcf.csi"),
     log:
         "logs/glimpse_phase/{chrom}_chunk_{idx}.log",
-    threads: 16
+    threads: 24
     resources:
         mem_mb=16000,
     params:
@@ -114,7 +142,7 @@ rule glimpse_ligate:
         csi="results/imputed/{chrom}.bcf.csi",
     log:
         "logs/glimpse_ligate/{chrom}.log",
-    threads: 4
+    threads: 8
     resources:
         mem_mb=8000,
     params:
@@ -136,7 +164,7 @@ rule concat_imputed:
         csi="results/imputed/all.bcf.csi",
     log:
         "logs/concat_imputed/all.log",
-    threads: 4
+    threads: 8
     resources:
         mem_mb=8000,
     shell:
