@@ -3,19 +3,16 @@
 [![Snakemake](https://img.shields.io/badge/snakemake-%E2%89%A58.20-brightgreen.svg)](https://snakemake.github.io)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 
-A Snakemake workflow for genotype imputation of low-coverage rice sequencing data using **GLIMPSE2**.
+A Snakemake workflow for genotype imputation of low-coverage rice sequencing data using **GLIMPSE1**.
 
 ## Overview
 
 ```
-FASTQ ──▶ fastp trim ──▶ bwa-mem2 mem ──▶ samtools sort + markdup ──▶ BAM
-                                                                                │
-phased panel VCF ──▶ split per-chrom ──▶ GLIMPSE2_chunk ──▶ split_reference     │
-                                                                │               │
-                                                                └──▶ GLIMPSE2_phase (--bam-list)
-                                                                              │
-                                                                              ▼
-                                                              GLIMPSE2_ligate ──▶ per-chrom VCF
+fastp ──▶ bwa-mem2 + markdup ──▶ bcftools mpileup + call ──▶ bcftools concat + merge
+                                                                       │
+panel VCF ──▶ GLIMPSE_chunk ──▶ GLIMPSE_phase ◀────────────────────────┘
+                                       │
+                                GLIMPSE_ligate ──▶ bcftools concat ──▶ imputed VCF
 ```
 
 ## Requirements
@@ -26,22 +23,25 @@ phased panel VCF ──▶ split per-chrom ──▶ GLIMPSE2_chunk ──▶ sp
 
 User-supplied resources (paths in `config/config.yaml`):
 
-| Item | Where to put it |
-|---|---|
-| Reference FASTA | `reference.fasta` |
-| Per-chrom full-GT panel BCF + .csi | matching `panel.full_template` |
-| Per-chrom sites-only VCF + .csi | matching `panel.sites_template` |
-| Per-chromosome genetic maps in GLIMPSE2 format | matching `genetic_map.template` |
-| Per-sample paired-end FASTQ | listed in `config/samples.tsv` |
+| Item                                          | Where to put it                            |
+| --------------------------------------------- | ------------------------------------------ |
+| Reference FASTA                               | `config.reference.fasta`                   |
+| Per-chrom full-GT panel VCF.GZ + .csi         | matching `config.panel.full_template`      |
+| Per-chrom sites-only TSV.GZ + .tbi            | matching `config.panel.sites_tsv_template` |
+| Per-chromosome genetic maps (GLIMPSE1 format) | matching `config.genetic_map.template`     |
+| Per-sample paired-end FASTQ                   | listed in `config/samples.tsv`             |
+
+> **GLIMPSE1** binaries (`GLIMPSE_chunk`, `GLIMPSE_phase`, `GLIMPSE_ligate`) must be on `PATH`.
+> Follow the [GLIMPSE1 installation guide](https://odelaneau.github.io/GLIMPSE/glimpse1/installation.html) to compile before running the workflow.
 
 ## Usage
 
 ```bash
-pixi install                       # install snakemake + slurm plugin into .pixi/
-pixi run envs                      # pre-create per-rule conda envs (optional)
-pixi run dry                       # dry-run
-pixi run local                     # local execution with 8 cores
-pixi run run                       # SLURM submission via slurm/config.yaml
+pixi install
+pixi run envs
+pixi run dry
+pixi run local
+pixi run run
 ```
 
 See `config/README.md` for the configuration reference.
@@ -52,7 +52,6 @@ Reference- and panel-only rules are marked `cache: True` so their outputs can be
 shared across runs/projects:
 
 - `bwa_mem2_index`, `samtools_faidx`
-- `glimpse2_split_reference`
 
 `pixi.toml` defaults `SNAKEMAKE_OUTPUT_CACHE=.snakemake-cache`. To share the cache
 across projects (recommended for a fixed reference + panel), set it to a shared
@@ -62,6 +61,10 @@ path before invoking pixi tasks:
 export SNAKEMAKE_OUTPUT_CACHE=/shared/snakemake-cache
 pixi run run
 ```
+
+## TODO
+
+- Replace bwa-mem2 with minibwa for alignment
 
 ## Layout
 
@@ -78,6 +81,7 @@ pixi.toml       pixi project manifest
 
 ## References
 
-- Rubinacci S. et al. *Imputation of low-coverage sequencing data from 150,119 UK Biobank genomes.* Nat. Genet. 2023. (GLIMPSE2)
-- Vasimuddin Md. et al. *Efficient Architecture-Aware Acceleration of BWA-MEM for Multicore Systems.* IPDPS 2019. (bwa-mem2)
-- Köster J. et al. *Sustainable data analysis with Snakemake.* F1000Research 2021.
+- Rubinacci S, Ribeiro D, Hofmeister R, Delaneau O. _Efficient phasing and imputation of low-coverage sequencing data using large reference panels._ Nature Genetics 53.1 (2021): 120-126. (GLIMPSE1)
+- Vasimuddin Md. et al. _Efficient Architecture-Aware Acceleration of BWA-MEM for Multicore Systems._ IPDPS 2019. (bwa-mem2)
+- Chen S. _Ultrafast one-pass FASTQ data preprocessing, quality control, and deduplication using fastp._ iMeta 2023.
+- Köster J. et al. _Sustainable data analysis with Snakemake._ F1000Research 2021.

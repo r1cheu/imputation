@@ -1,14 +1,16 @@
 rule bwa_mem2_index:
+    conda:
+        "../envs/bwa-mem2.yml"
     input:
-        REF_FASTA,
+        config["reference"]["fasta"],
     output:
         multiext(
-            REF_FASTA,
-            ".0123",
-            ".amb",
-            ".ann",
-            ".bwt.2bit.64",
-            ".pac",
+            config["reference"]["fasta"],
+            idx0123=".0123",
+            amb=".amb",
+            ann=".ann",
+            bwt=".bwt.2bit.64",
+            pac=".pac",
         ),
     log:
         "logs/reference/bwa_mem2_index.log",
@@ -21,10 +23,12 @@ rule bwa_mem2_index:
 
 
 rule samtools_faidx:
+    conda:
+        "../envs/samtools.yml"
     input:
-        REF_FASTA,
+        fasta=config["reference"]["fasta"],
     output:
-        f"{REF_FASTA}.fai",
+        fai=config["reference"]["fasta"] + ".fai",
     log:
         "logs/reference/samtools_faidx.log",
     cache: True
@@ -32,4 +36,4 @@ rule samtools_faidx:
     resources:
         mem_mb=500,
     shell:
-        "samtools faidx {input} > {log} 2>&1"
+        "samtools faidx {input.fasta} > {log} 2>&1"

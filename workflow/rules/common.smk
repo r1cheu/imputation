@@ -17,19 +17,14 @@ MERGE_GL_BATCH_SIZE = int(config.get("merge_gl", {}).get("batch_size", 400))
 MERGE_GL_BATCHES = [
     f"{i:04d}" for i in range((len(SAMPLES) + MERGE_GL_BATCH_SIZE - 1) // MERGE_GL_BATCH_SIZE)
 ]
-
+PANEL_PREFIX = config["panel"]["full_template"].replace(".vcf.gz", "")
+SITES_PREFIX = config["panel"]["sites_tsv_template"].replace(".tsv.gz", "")
 
 wildcard_constraints:
     sample="|".join(SAMPLES),
     chrom="|".join(CHROMS),
     idx=r"\d+",
     batch=r"\d+",
-
-REF_FASTA = config["reference"]["fasta"]
-REF_PREFIX = REF_FASTA  # bwa-mem2 index prefix == fasta path
-PANEL_FULL = config["panel"]["full_template"]
-PANEL_SITES_TSV = config["panel"]["sites_tsv_template"]
-MAP_TEMPLATE = config["genetic_map"]["template"]
 
 
 def get_fastq(wc):
@@ -50,7 +45,7 @@ def get_read_group(wc):
 
 
 def get_map(wc):
-    return MAP_TEMPLATE.format(chrom=wc.chrom)
+    return config["genetic_map"]["template"].format(chrom=wc.chrom)
 
 
 def merge_gl_batch_samples(wc):

@@ -1,9 +1,10 @@
 rule fastp_trim:
+    conda:
+        "../envs/fastp.yml"
     input:
         unpack(get_fastq),
     output:
-        r1=temp("results/trimmed/{sample}.1.fq.gz"),
-        r2=temp("results/trimmed/{sample}.2.fq.gz"),
+        multiext("results/trimmed/{sample}", r1=".1.fq.gz", r2=".2.fq.gz"),
     log:
         "logs/fastp/{sample}.log",
     benchmark:

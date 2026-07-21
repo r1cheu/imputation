@@ -1,17 +1,18 @@
 rule bwa_align_dedup:
+    conda:
+        "../envs/align.yml"
     input:
-        reads=get_trimmed_reads,
+        reads=multiext("results/trimmed/{sample}", r1=".1.fq.gz", r2=".2.fq.gz"),
         idx=multiext(
-            REF_FASTA,
-            ".0123",
-            ".amb",
-            ".ann",
-            ".bwt.2bit.64",
-            ".pac",
+            config["reference"]["fasta"],
+            idx0123=".0123",
+            amb=".amb",
+            ann=".ann",
+            bwt=".bwt.2bit.64",
+            pac=".pac",
         ),
     output:
-        bam="results/dedup/{sample}.bam",
-        bai="results/dedup/{sample}.bam.bai",
+        multiext("results/dedup/{sample}", bam=".bam", bai=".bam.bai"),
     log:
         "logs/bwa_dedup/{sample}.log",
     benchmark:
@@ -21,9 +22,9 @@ rule bwa_align_dedup:
         mem_mb=24000,
     params:
         rg=get_read_group,
-        idx_prefix=lambda wc, input: input.idx[0].rsplit(".0123", 1)[0],
+        idx_prefix=config["reference"]["fasta"],
     shell:
-        "(bwa-mem2 mem -t {threads} -R '{params.rg}' {params.idx_prefix} {input.reads} | "
+        "(bwa-mem2 mem -t {threads} -R '{params.rg}' {params.idx_prefix} {input.reads.r1} {input.reads.r2} | "
         "samtools fixmate -@ {threads} -m -u - - | "
         "samtools sort -@ {threads} -u -m 1G - | "
         "samtools markdup -@ {threads} -r --write-index - {output.bam}##idx##{output.bai}) > {log} 2>&1"

@@ -1,16 +1,14 @@
 rule compute_gl:
+    conda:
+        "../envs/bcftools.yml"
     input:
-        bam="results/dedup/{sample}.bam",
-        bai="results/dedup/{sample}.bam.bai",
-        ref=REF_FASTA,
-        fai=f"{REF_FASTA}.fai",
-        panel=PANEL_FULL,
-        panel_csi=f"{PANEL_FULL}.csi",
-        sites_tsv=PANEL_SITES_TSV,
-        sites_tbi=f"{PANEL_SITES_TSV}.tbi",
+        multiext("results/dedup/{sample}", bam=".bam", bai=".bam.bai"),
+        multiext(PANEL_PREFIX, panel_vcf=".vcf.gz", panel_csi=".vcf.gz.csi"),
+        multiext(SITES_PREFIX, sites_tsv=".tsv.gz", sites_tbi=".tsv.gz.tbi"),
+        ref=config["reference"]["fasta"],
+        fai=config["reference"]["fasta"] + ".fai",
     output:
-        bcf=temp("results/gl/{sample}/{chrom}.bcf"),
-        csi=temp("results/gl/{sample}/{chrom}.bcf.csi"),
+        multiext("results/gl/{sample}/{chrom}", bcf=".bcf", csi=".bcf.csi"),
     log:
         "logs/compute_gl/{sample}_{chrom}.log",
     threads: 1
@@ -18,18 +16,19 @@ rule compute_gl:
         mem_mb=4000,
     shell:
         "(bcftools mpileup -f {input.ref} -I -E -a 'FORMAT/DP' "
-        "-T {input.panel} -r {wildcards.chrom} {input.bam} -Ou | "
+        "-T {input.panel_vcf} -r {wildcards.chrom} {input.bam} -Ou | "
         "bcftools call -Aim -C alleles -T {input.sites_tsv} -Ob -o {output.bcf} && "
         "bcftools index -f {output.bcf}) > {log} 2>&1"
 
 
 rule concat_gl:
+    conda:
+        "../envs/bcftools.yml"
     input:
         bcfs=expand("results/gl/{{sample}}/{chrom}.bcf", chrom=CHROMS),
         csis=expand("results/gl/{{sample}}/{chrom}.bcf.csi", chrom=CHROMS),
     output:
-        bcf="results/gl/{sample}.bcf",
-        csi="results/gl/{sample}.bcf.csi",
+        multiext("results/gl/{sample}", bcf=".bcf", csi=".bcf.csi"),
     log:
         "logs/concat_gl/{sample}.log",
     threads: 1
@@ -41,12 +40,15 @@ rule concat_gl:
 
 
 rule merge_gl_batch:
+    conda:
+        "../envs/bcftools.yml"
     input:
         bcfs=merge_gl_batch_bcfs,
         csis=merge_gl_batch_csis,
     output:
-        bcf=temp("results/gl_merged_batches/{chrom}/batch_{batch}.bcf"),
-        csi=temp("results/gl_merged_batches/{chrom}/batch_{batch}.bcf.csi"),
+        temp(
+            multiext("results/gl_merged_batches/{chrom}/batch_{batch}", bcf=".bcf", csi=".bcf.csi")
+        ),
     log:
         "logs/merge_gl_batch/{chrom}_batch_{batch}.log",
     threads: 2
@@ -64,12 +66,13 @@ rule merge_gl_batch:
 
 
 rule merge_gl:
+    conda:
+        "../envs/bcftools.yml"
     input:
         bcfs=expand("results/gl_merged_batches/{{chrom}}/batch_{batch}.bcf", batch=MERGE_GL_BATCHES),
         csis=expand("results/gl_merged_batches/{{chrom}}/batch_{batch}.bcf.csi", batch=MERGE_GL_BATCHES),
     output:
-        bcf="results/gl_merged/{chrom}.bcf",
-        csi="results/gl_merged/{chrom}.bcf.csi",
+        multiext("results/gl_merged/{chrom}", bcf=".bcf", csi=".bcf.csi"),
     log:
         "logs/merge_gl/{chrom}.log",
     threads: 8
@@ -88,8 +91,7 @@ rule merge_gl:
 
 checkpoint glimpse_chunk:
     input:
-        bcf=PANEL_FULL,
-        csi=f"{PANEL_FULL}.csi",
+        multiext(PANEL_PREFIX, panel_vcf=".vcf.gz", panel_csi=".vcf.gz.csi"),
     output:
         "results/chunks/{chrom}.txt",
     log:
@@ -102,21 +104,20 @@ checkpoint glimpse_chunk:
         buffer_size=config["glimpse_chunk"]["buffer_size"],
         extra=config["glimpse_chunk"]["extra"],
     shell:
-        "GLIMPSE_chunk --input {input.bcf} --region {wildcards.chrom} "
+        "GLIMPSE_chunk --input {input.panel_vcf} --region {wildcards.chrom} "
         "--window-size {params.window_size} --buffer-size {params.buffer_size} "
         "--thread {threads} --output {output} {params.extra} > {log} 2>&1"
 
 
 rule glimpse_phase:
     input:
-        gl="results/gl_merged/{chrom}.bcf",
-        gl_csi="results/gl_merged/{chrom}.bcf.csi",
-        ref=PANEL_FULL,
-        ref_csi=f"{PANEL_FULL}.csi",
+        multiext("results/gl_merged/{chrom}", gl_bcf=".bcf", gl_csi=".bcf.csi"),
+        multiext(PANEL_PREFIX, ref_vcf=".vcf.gz", ref_csi=".vcf.gz.csi"),
         gmap=get_map,
     output:
-        bcf=temp("results/phased/{chrom}/chunk_{idx}.bcf"),
-        csi=temp("results/phased/{chrom}/chunk_{idx}.bcf.csi"),
+        temp(
+            multiext("results/phased/{chrom}/chunk_{idx}", bcf=".bcf", csi=".bcf.csi")
+        ),
     log:
         "logs/glimpse_phase/{chrom}_chunk_{idx}.log",
     threads: 24
@@ -126,7 +127,7 @@ rule glimpse_phase:
         input_region=lambda wc: get_chunk_region(wc, "input_region"),
         output_region=lambda wc: get_chunk_region(wc, "output_region"),
     shell:
-        "(GLIMPSE_phase --input {input.gl} --reference {input.ref} --map {input.gmap} "
+        "(GLIMPSE_phase --input {input.gl_bcf} --reference {input.ref_vcf} --map {input.gmap} "
         "--input-region {params.input_region} --output-region {params.output_region} "
         "--thread {threads} --output {output.bcf} && "
         "bcftools index -f {output.bcf}) > {log} 2>&1"
@@ -137,8 +138,7 @@ rule glimpse_ligate:
         bcfs=phased_chunks,
         csis=phased_chunks_idx,
     output:
-        bcf="results/imputed/{chrom}.bcf",
-        csi="results/imputed/{chrom}.bcf.csi",
+        multiext("results/imputed/{chrom}", bcf=".bcf", csi=".bcf.csi"),
     log:
         "logs/glimpse_ligate/{chrom}.log",
     threads: 8
@@ -155,12 +155,13 @@ rule glimpse_ligate:
 
 
 rule concat_imputed:
+    conda:
+        "../envs/bcftools.yml"
     input:
         bcfs=expand("results/imputed/{chrom}.bcf", chrom=CHROMS),
         csis=expand("results/imputed/{chrom}.bcf.csi", chrom=CHROMS),
     output:
-        bcf="results/imputed/all.bcf",
-        csi="results/imputed/all.bcf.csi",
+        multiext("results/imputed/all", bcf=".bcf", csi=".bcf.csi"),
     log:
         "logs/concat_imputed/all.log",
     threads: 8

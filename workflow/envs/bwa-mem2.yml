@@ -1,0 +1,6 @@
+name: bwa-mem2
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bwa-mem2=2.3

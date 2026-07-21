@@ -1,7 +1,7 @@
 [workspace]
 name = "rice-imputation"
 version = "0.1.0"
-description = "Low-coverage rice sequencing imputation pipeline using GLIMPSE2"
+description = "Low-coverage rice sequencing imputation pipeline using GLIMPSE1"
 channels = ["conda-forge", "bioconda"]
 platforms = ["linux-64"]
 
