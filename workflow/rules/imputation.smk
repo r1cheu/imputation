@@ -90,7 +90,6 @@ checkpoint glimpse_chunk:
     input:
         bcf=PANEL_FULL,
         csi=f"{PANEL_FULL}.csi",
-        gmap=get_map,
     output:
         "results/chunks/{chrom}.txt",
     log:
@@ -103,7 +102,7 @@ checkpoint glimpse_chunk:
         buffer_size=config["glimpse_chunk"]["buffer_size"],
         extra=config["glimpse_chunk"]["extra"],
     shell:
-        "GLIMPSE_chunk --input {input.bcf} --map {input.gmap} --region {wildcards.chrom} "
+        "GLIMPSE_chunk --input {input.bcf} --region {wildcards.chrom} "
         "--window-size {params.window_size} --buffer-size {params.buffer_size} "
         "--thread {threads} --output {output} {params.extra} > {log} 2>&1"
 
