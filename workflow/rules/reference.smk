@@ -1,30 +1,21 @@
-rule bwa_mem2_index:
-    conda:
-        "../envs/bwa-mem2.yml"
+rule minibwa_index:
     input:
         config["reference"]["fasta"],
     output:
-        multiext(
-            config["reference"]["fasta"],
-            idx0123=".0123",
-            amb=".amb",
-            ann=".ann",
-            bwt=".bwt.2bit.64",
-            pac=".pac",
-        ),
+        multiext(config["reference"]["fasta"], l2b=".l2b", mbw=".mbw"),
     log:
-        "logs/reference/bwa_mem2_index.log",
+        "logs/reference/minibwa_index.log",
     cache: True
-    threads: 1
+    conda:
+        "../envs/minibwa.yml"
+    threads: 8
     resources:
         mem_mb=12000,
     shell:
-        "bwa-mem2 index {input} > {log} 2>&1"
+        "minibwa index -t {threads} {input} > {log} 2>&1"
 
 
 rule samtools_faidx:
-    conda:
-        "../envs/samtools.yml"
     input:
         fasta=config["reference"]["fasta"],
     output:
@@ -32,6 +23,8 @@ rule samtools_faidx:
     log:
         "logs/reference/samtools_faidx.log",
     cache: True
+    conda:
+        "../envs/samtools.yml"
     threads: 1
     resources:
         mem_mb=500,

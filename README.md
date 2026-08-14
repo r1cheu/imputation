@@ -8,7 +8,7 @@ A Snakemake workflow for genotype imputation of low-coverage rice sequencing dat
 ## Overview
 
 ```
-fastp ──▶ bwa-mem2 + markdup ──▶ bcftools mpileup + call ──▶ bcftools concat + merge
+fastp ──▶ minibwa + markdup ──▶ bcftools mpileup + call ──▶ bcftools concat + merge
                                                                        │
 panel VCF ──▶ GLIMPSE_chunk ──▶ GLIMPSE_phase ◀────────────────────────┘
                                        │
@@ -51,7 +51,7 @@ See `config/README.md` for the configuration reference.
 Reference- and panel-only rules are marked `cache: True` so their outputs can be
 shared across runs/projects:
 
-- `bwa_mem2_index`, `samtools_faidx`
+- `minibwa_index`, `samtools_faidx`
 
 `pixi.toml` defaults `SNAKEMAKE_OUTPUT_CACHE=.snakemake-cache`. To share the cache
 across projects (recommended for a fixed reference + panel), set it to a shared
@@ -61,10 +61,6 @@ path before invoking pixi tasks:
 export SNAKEMAKE_OUTPUT_CACHE=/shared/snakemake-cache
 pixi run run
 ```
-
-## TODO
-
-- Replace bwa-mem2 with minibwa for alignment
 
 ## Layout
 
@@ -82,6 +78,6 @@ pixi.toml       pixi project manifest
 ## References
 
 - Rubinacci S, Ribeiro D, Hofmeister R, Delaneau O. _Efficient phasing and imputation of low-coverage sequencing data using large reference panels._ Nature Genetics 53.1 (2021): 120-126. (GLIMPSE1)
-- Vasimuddin Md. et al. _Efficient Architecture-Aware Acceleration of BWA-MEM for Multicore Systems._ IPDPS 2019. (bwa-mem2)
+- Li H. _Minibwa: successor of bwa-mem for short-read alignment._ https://github.com/lh3/minibwa
 - Chen S. _Ultrafast one-pass FASTQ data preprocessing, quality control, and deduplication using fastp._ iMeta 2023.
 - Köster J. et al. _Sustainable data analysis with Snakemake._ F1000Research 2021.

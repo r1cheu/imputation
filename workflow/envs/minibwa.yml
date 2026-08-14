@@ -1,6 +1,6 @@
-name: bwa-mem2
+name: minibwa
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - bwa-mem2=2.3
+  - minibwa=0.7
