@@ -13,30 +13,21 @@ validate(config, schema="../schemas/config.schema.yaml")
 
 SAMPLES = samples.index.tolist()
 CHROMS = config["chromosomes"]
-MERGE_GL_BATCH_SIZE = int(config.get("merge_gl", {}).get("batch_size", 400))
-MERGE_GL_BATCHES = [
-    f"{i:04d}" for i in range((len(SAMPLES) + MERGE_GL_BATCH_SIZE - 1) // MERGE_GL_BATCH_SIZE)
-]
-PANEL_PREFIX = config["panel"]["full_template"].replace(".vcf.gz", "")
-SITES_PREFIX = config["panel"]["sites_tsv_template"].replace(".tsv.gz", "")
+PHASE_BATCH_SIZE = int(config.get("phase", {}).get("batch_size", 200))
+PANEL = config["panel"]["full_template"]
+MIN_DEPTH = float(config.get("bam_filter", {}).get("min_depth", 1.0))
+MAX_UNMAPPED_FRAC = float(config.get("bam_filter", {}).get("max_unmapped_frac", 0.8))
+
 
 wildcard_constraints:
     sample="|".join(SAMPLES),
     chrom="|".join(CHROMS),
-    idx=r"\d+",
     batch=r"\d+",
 
 
 def get_fastq(wc):
     row = samples.loc[wc.sample]
     return {"r1": row["fq1"], "r2": row["fq2"]}
-
-
-def get_trimmed_reads(wc):
-    return [
-        f"results/trimmed/{wc.sample}.1.fq.gz",
-        f"results/trimmed/{wc.sample}.2.fq.gz",
-    ]
 
 
 def get_read_group(wc):
@@ -48,56 +39,67 @@ def get_map(wc):
     return config["genetic_map"]["template"].format(chrom=wc.chrom)
 
 
-def merge_gl_batch_samples(wc):
-    batch = int(wc.batch)
-    start = batch * MERGE_GL_BATCH_SIZE
-    end = start + MERGE_GL_BATCH_SIZE
-    return SAMPLES[start:end]
+STATS_KEYS = {
+    "raw total sequences:": "total",
+    "reads unmapped:": "unmapped",
+    "bases mapped (cigar):": "mapped_bases",
+}
 
 
-def merge_gl_batch_bcfs(wc):
-    return [f"results/gl/{sample}.bcf" for sample in merge_gl_batch_samples(wc)]
+def read_bam_stats(path):
+    """Parse the SN section of a `samtools stats` report."""
+    stats = {}
+    with open(path) as f:
+        for line in f:
+            if not line.startswith("SN\t"):
+                continue
+            fields = line.rstrip("\n").split("\t")
+            if fields[1] in STATS_KEYS:
+                stats[STATS_KEYS[fields[1]]] = int(fields[2])
+    return stats
 
 
-def merge_gl_batch_csis(wc):
-    return [f"results/gl/{sample}.bcf.csi" for sample in merge_gl_batch_samples(wc)]
+def genome_size(fai):
+    return int(pd.read_csv(fai, sep="\t", header=None, usecols=[1])[1].sum())
 
 
-CHUNK_COLS = ["idx", "chrom", "input_region", "output_region"]
+def chrom_region(wc, input):
+    """Whole-chromosome region (chrX:1-LEN) as required by GLIMPSE2_split_reference."""
+    lengths = pd.read_csv(
+        input.fai, sep="\t", header=None, usecols=[0, 1], index_col=0
+    )[1]
+    return f"{wc.chrom}:1-{lengths[wc.chrom]}"
 
 
-def read_chunks(chrom):
-    path = checkpoints.glimpse_chunk.get(chrom=chrom).output[0]
-    df = pd.read_csv(
-        path,
-        sep=r"\s+",
-        header=None,
-        comment="#",
-        usecols=[0, 1, 2, 3],
-        names=CHUNK_COLS,
-        index_col=False,
-        dtype=str,
-    )
-    return df
+def passed_samples():
+    path = checkpoints.filter_samples.get().output.passed
+    with open(path) as f:
+        return [line.strip() for line in f if line.strip()]
 
 
-def get_chunk_region(wc, kind):
-    df = read_chunks(wc.chrom)
-    row = df.loc[df["idx"] == wc.idx]
-    if row.empty:
-        raise ValueError(f"chunk {wc.idx} not in chunks file for {wc.chrom}")
-    return row.iloc[0][kind]
+def phase_batches():
+    n = len(passed_samples())
+    return [f"{i:04d}" for i in range((n + PHASE_BATCH_SIZE - 1) // PHASE_BATCH_SIZE)]
 
 
-def phased_chunks(wc):
+def batch_samples(wc):
+    start = int(wc.batch) * PHASE_BATCH_SIZE
+    return passed_samples()[start : start + PHASE_BATCH_SIZE]
+
+
+def batch_bams(wc):
+    return [f"results/dedup/{sample}.bam" for sample in batch_samples(wc)]
+
+
+def batch_bais(wc):
+    return [f"results/dedup/{sample}.bam.bai" for sample in batch_samples(wc)]
+
+
+def phased_batches(wc):
+    return [f"results/phased/{wc.chrom}/batch_{batch}.bcf" for batch in phase_batches()]
+
+
+def phased_batches_idx(wc):
     return [
-        f"results/phased/{wc.chrom}/chunk_{idx}.bcf"
-        for idx in read_chunks(wc.chrom)["idx"]
-    ]
-
-
-def phased_chunks_idx(wc):
-    return [
-        f"results/phased/{wc.chrom}/chunk_{idx}.bcf.csi"
-        for idx in read_chunks(wc.chrom)["idx"]
+        f"results/phased/{wc.chrom}/batch_{batch}.bcf.csi" for batch in phase_batches()
     ]

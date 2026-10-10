@@ -21,13 +21,9 @@ properties:
     properties:
       full_template:
         type: string
-        description: per-chrom full-GT panel BCF template, e.g. "reference/panel_{chrom}.bcf"
-      sites_tsv_template:
-        type: string
-        description: per-chrom sites TSV (CHROM\tPOS\tREF,ALT) bgzipped with .tbi alongside
+        description: per-chrom phased panel VCF/BCF template with .csi alongside, e.g. "reference/panel_{chrom}.bcf"
     required:
       - full_template
-      - sites_tsv_template
 
   chromosomes:
     type: array
@@ -45,30 +41,29 @@ properties:
     required:
       - template
 
-  merge_gl:
+  bam_filter:
+    type: object
+    properties:
+      min_depth:
+        type: number
+        default: 1.0
+        minimum: 0
+        description: samples with mapped depth (after dedup) below this are dropped
+      max_unmapped_frac:
+        type: number
+        default: 0.8
+        minimum: 0
+        maximum: 1
+        description: samples with a fraction of unmapped reads above this are dropped
+
+  phase:
     type: object
     properties:
       batch_size:
         type: integer
-        default: 400
+        default: 200
         minimum: 1
-        description: maximum number of sample GL BCFs merged in one bcftools merge job
-
-  glimpse_chunk:
-    type: object
-    properties:
-      window_size:
-        type: integer
-        default: 2000000
-      buffer_size:
-        type: integer
-        default: 200000
-      extra:
-        type: string
-        default: ""
-    required:
-      - window_size
-      - buffer_size
+        description: maximum number of BAMs imputed in one GLIMPSE2_phase job
 
   fastp:
     type: object
@@ -83,4 +78,3 @@ required:
   - panel
   - chromosomes
   - genetic_map
-  - glimpse_chunk

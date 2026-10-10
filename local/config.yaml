@@ -1,3 +1,4 @@
+software-deployment-method: conda
 keep-going: True
 rerun-incomplete: True
 latency-wait: 120

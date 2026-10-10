@@ -22,7 +22,7 @@ bash .test/setup_data.sh
 pixi run snakemake --directory .test --sdm conda --cores 8
 ```
 
-Expected output: `.test/results/imputed/chr22.vcf.gz` (~10 MB, ~930k SNPs).
+Expected output: `.test/results/imputed/all.bcf`.
 
 ## Files in git
 

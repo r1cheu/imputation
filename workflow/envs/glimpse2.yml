@@ -1,0 +1,7 @@
+name: glimpse2
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - glimpse-bio=2.0.1
+  - bcftools=1.21

@@ -3,17 +3,22 @@
 [![Snakemake](https://img.shields.io/badge/snakemake-%E2%89%A58.20-brightgreen.svg)](https://snakemake.github.io)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 
-A Snakemake workflow for genotype imputation of low-coverage rice sequencing data using **GLIMPSE1**.
+A Snakemake workflow for genotype imputation of low-coverage rice sequencing data using **GLIMPSE2**.
 
 ## Overview
 
 ```
-fastp ──▶ minibwa + markdup ──▶ bcftools mpileup + call ──▶ bcftools concat + merge
-                                                                       │
-panel VCF ──▶ GLIMPSE_chunk ──▶ GLIMPSE_phase ◀────────────────────────┘
-                                       │
-                                GLIMPSE_ligate ──▶ bcftools concat ──▶ imputed VCF
+fastp ──▶ minibwa + markdup ──▶ samtools stats ──▶ sample filter (depth / unmapped)
+                                                          │
+panel VCF ──▶ GLIMPSE2_split_reference (whole chrom) ──▶ GLIMPSE2_phase (--bam-list, per batch)
+                                                          │
+                                  bcftools merge (batches) ──▶ bcftools concat ──▶ imputed BCF
 ```
+
+Each chromosome is imputed as a single region (no chunking, so no ligation).
+Samples with mapped depth below `bam_filter.min_depth` or a fraction of unmapped
+reads above `bam_filter.max_unmapped_frac` are dropped before imputation; the
+per-sample metrics are written to `results/qc/sample_qc.tsv`.
 
 ## Requirements
 
@@ -23,22 +28,17 @@ panel VCF ──▶ GLIMPSE_chunk ──▶ GLIMPSE_phase ◀──────�
 
 User-supplied resources (paths in `config/config.yaml`):
 
-| Item                                          | Where to put it                            |
-| --------------------------------------------- | ------------------------------------------ |
-| Reference FASTA                               | `config.reference.fasta`                   |
-| Per-chrom full-GT panel VCF.GZ + .csi         | matching `config.panel.full_template`      |
-| Per-chrom sites-only TSV.GZ + .tbi            | matching `config.panel.sites_tsv_template` |
-| Per-chromosome genetic maps (GLIMPSE1 format) | matching `config.genetic_map.template`     |
-| Per-sample paired-end FASTQ                   | listed in `config/samples.tsv`             |
-
-> **GLIMPSE1** binaries (`GLIMPSE_chunk`, `GLIMPSE_phase`, `GLIMPSE_ligate`) must be on `PATH`.
-> Follow the [GLIMPSE1 installation guide](https://odelaneau.github.io/GLIMPSE/glimpse1/installation.html) to compile before running the workflow.
+| Item                                       | Where to put it                        |
+| ------------------------------------------ | -------------------------------------- |
+| Reference FASTA                            | `config.reference.fasta`               |
+| Per-chrom phased panel VCF.GZ/BCF + .csi   | matching `config.panel.full_template`  |
+| Per-chromosome genetic maps (`pos chr cM`) | matching `config.genetic_map.template` |
+| Per-sample paired-end FASTQ                | listed in `config/samples.tsv`         |
 
 ## Usage
 
 ```bash
 pixi install
-pixi run envs
 pixi run dry
 pixi run local
 pixi run run
@@ -68,8 +68,8 @@ pixi run run
 config/         user-facing config (config.yaml + samples.tsv)
 slurm/          snakemake-executor-plugin-slurm profile
 workflow/
-  Snakefile     main entry; rule all = per-chrom imputed VCF
-  rules/        common, reference, trim, align, imputation
+  Snakefile     main entry; rule all = whole-genome imputed BCF
+  rules/        common, reference, trim, align, qc, imputation
   envs/         per-rule conda environments
   schemas/      config and sample-sheet JSON schemas
 pixi.toml       pixi project manifest
@@ -77,7 +77,7 @@ pixi.toml       pixi project manifest
 
 ## References
 
-- Rubinacci S, Ribeiro D, Hofmeister R, Delaneau O. _Efficient phasing and imputation of low-coverage sequencing data using large reference panels._ Nature Genetics 53.1 (2021): 120-126. (GLIMPSE1)
+- Rubinacci S, Hofmeister R, Sousa da Mota B, Delaneau O. _Imputation of low-coverage sequencing data from 150,119 UK Biobank genomes._ Nature Genetics 55 (2023): 1088-1090. (GLIMPSE2)
 - Li H. _Minibwa: successor of bwa-mem for short-read alignment._ https://github.com/lh3/minibwa
 - Chen S. _Ultrafast one-pass FASTQ data preprocessing, quality control, and deduplication using fastp._ iMeta 2023.
 - Köster J. et al. _Sustainable data analysis with Snakemake._ F1000Research 2021.

@@ -1,7 +1,7 @@
 [workspace]
 name = "rice-imputation"
 version = "0.1.0"
-description = "Low-coverage rice sequencing imputation pipeline using GLIMPSE1"
+description = "Low-coverage rice sequencing imputation pipeline using GLIMPSE2"
 channels = ["conda-forge", "bioconda"]
 platforms = ["linux-64"]
 
@@ -9,19 +9,18 @@ platforms = ["linux-64"]
 snakemake = ">=8.20"
 snakemake-executor-plugin-slurm = "*"
 snakefmt = "*"
+conda = ">=26.7.3,<27"
 
 [activation.env]
-# Native bioinformatics binaries built by scripts/install_bins.sh.
-PATH = "$PIXI_PROJECT_ROOT/bin:$PATH"
-# Between-workflow output cache for reusable rules (minibwa_index, samtools_faidx,
-# panel_index, split_panel, glimpse2_split_reference). Override to a shared path
+# Between-workflow output cache for reusable rules (minibwa_index, samtools_faidx).
+# Override to a shared path
 # (e.g. /shared/snakemake-cache) when reusing reference/panel across projects.
 SNAKEMAKE_OUTPUT_CACHE = "$PIXI_PROJECT_ROOT/.snakemake-cache"
 
 [tasks]
-dry = "snakemake -n --cores 1 --cache"
+dry = "snakemake -n --cores 1 --cache --sdm conda"
 lint = "snakemake --lint"
 fmt = "snakefmt workflow/"
 run = "snakemake --profile slurm --cache"
-local = "snakemake --cores 192 --cache"
+local = "snakemake --cores 192 --cache --sdm conda"
 unlock = "snakemake --unlock"

@@ -5,7 +5,6 @@ reference:
 
 panel:
   full_template: "resources/panel/1000GP.{chrom}.noNA12878.bcf"
-  sites_template: "resources/panel/1000GP.{chrom}.noNA12878.sites.vcf.gz"
 
 chromosomes:
   - "chr22"
@@ -13,10 +12,10 @@ chromosomes:
 genetic_map:
   template: "resources/maps/{chrom}.gmap"
 
-glimpse2_chunk:
-  window_mb: 4.0
-  buffer_mb: 0.5
-  extra: ""
+# Test reads cover chr22 at ~1x only, so do not filter on depth.
+bam_filter:
+  min_depth: 0
+  max_unmapped_frac: 0.8
 
 fastp:
   extra: ""

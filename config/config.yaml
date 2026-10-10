@@ -5,7 +5,6 @@ reference:
 
 panel:
   full_template: "resources/ref_panel/311/{chrom}.vcf.gz"
-  sites_tsv_template: "resources/ref_panel/311/{chrom}.tsv.gz"
 
 chromosomes:
   - "chr01"
@@ -24,13 +23,12 @@ chromosomes:
 genetic_map:
   template: "resources/map/{chrom}.map"
 
-merge_gl:
-  batch_size: 200
+bam_filter:
+  min_depth: 1.0
+  max_unmapped_frac: 0.8
 
-glimpse_chunk:
-  window_size: 2000000
-  buffer_size: 200000
-  extra: ""
+phase:
+  batch_size: 200
 
 fastp:
   extra: ""
