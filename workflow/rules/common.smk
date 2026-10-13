@@ -17,6 +17,7 @@ PHASE_BATCH_SIZE = int(config.get("phase", {}).get("batch_size", 200))
 PANEL = config["panel"]["full_template"]
 MIN_DEPTH = float(config.get("bam_filter", {}).get("min_depth", 1.0))
 MAX_UNMAPPED_FRAC = float(config.get("bam_filter", {}).get("max_unmapped_frac", 0.8))
+MIN_INFO = float(config.get("site_filter", {}).get("min_info", 0.95))
 
 
 wildcard_constraints:

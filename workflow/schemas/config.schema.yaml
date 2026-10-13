@@ -65,6 +65,16 @@ properties:
         minimum: 1
         description: maximum number of BAMs imputed in one GLIMPSE2_phase job
 
+  site_filter:
+    type: object
+    properties:
+      min_info:
+        type: number
+        default: 0.95
+        minimum: 0
+        maximum: 1
+        description: sites with a recomputed IMPUTE INFO score below this are dropped from final.bcf
+
   fastp:
     type: object
     properties:

@@ -12,13 +12,23 @@ fastp ──▶ minibwa + markdup ──▶ samtools stats ──▶ sample filt
                                                           │
 panel VCF ──▶ GLIMPSE2_split_reference (whole chrom) ──▶ GLIMPSE2_phase (--bam-list, per batch)
                                                           │
-                                  bcftools merge (batches) ──▶ bcftools concat ──▶ imputed BCF
+                                  bcftools merge (batches) ──▶ bcftools concat ──▶ raw.bcf
+                                                          │
+                          bcftools +impute-info ──▶ INFO filter ──▶ final.bcf ──▶ plink2 ──▶ final.bed
 ```
 
 Each chromosome is imputed as a single region (no chunking, so no ligation).
 Samples with mapped depth below `bam_filter.min_depth` or a fraction of unmapped
 reads above `bam_filter.max_unmapped_frac` are dropped before imputation; the
 per-sample metrics are written to `results/qc/sample_qc.tsv`.
+
+Batches are imputed separately, so the INFO score GLIMPSE2 writes only reflects
+one batch. It is recomputed across all samples with `bcftools +impute-info`, and
+sites below `site_filter.min_info` are dropped. Outputs in `results/imputed/`:
+
+- `raw.bcf` — all imputed sites, unfiltered
+- `final.bcf` — sites passing the INFO filter (INFO recomputed)
+- `final.{bed,bim,fam}` — `final.bcf` converted with plink2
 
 ## Requirements
 
@@ -68,7 +78,7 @@ pixi run run
 config/         user-facing config (config.yaml + samples.tsv)
 slurm/          snakemake-executor-plugin-slurm profile
 workflow/
-  Snakefile     main entry; rule all = whole-genome imputed BCF
+  Snakefile     main entry; rule all = INFO-filtered BCF + PLINK bed
   rules/        common, reference, trim, align, qc, imputation
   envs/         per-rule conda environments
   schemas/      config and sample-sheet JSON schemas

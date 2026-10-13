@@ -98,9 +98,9 @@ rule concat_imputed:
         bcfs=expand("results/imputed/{chrom}.bcf", chrom=CHROMS),
         csis=expand("results/imputed/{chrom}.bcf.csi", chrom=CHROMS),
     output:
-        multiext("results/imputed/all", bcf=".bcf", csi=".bcf.csi"),
+        multiext("results/imputed/raw", bcf=".bcf", csi=".bcf.csi"),
     log:
-        "logs/concat_imputed/all.log",
+        "logs/concat_imputed/raw.log",
     conda:
         "../envs/bcftools.yml"
     threads: 8
@@ -109,3 +109,48 @@ rule concat_imputed:
     shell:
         "(bcftools concat --threads {threads} -Ob -o {output.bcf} {input.bcfs} && "
         "bcftools index -f --threads {threads} {output.bcf}) > {log} 2>&1"
+
+
+rule filter_imputed:
+    input:
+        bcf="results/imputed/raw.bcf",
+        csi="results/imputed/raw.bcf.csi",
+    output:
+        multiext("results/imputed/final", bcf=".bcf", csi=".bcf.csi"),
+    log:
+        "logs/filter_imputed/final.log",
+    conda:
+        "../envs/bcftools.yml"
+    threads: 8
+    resources:
+        mem_mb=8000,
+    params:
+        min_info=MIN_INFO,
+    shell:
+        """
+        (bcftools +impute-info -Ou {input.bcf} \
+            | bcftools view -i 'INFO/INFO>={params.min_info}' --threads {threads} \
+                -Ob -o {output.bcf} \
+            && bcftools index -f --threads {threads} {output.bcf}) >{log} 2>&1
+        """
+
+
+rule plink_bed:
+    input:
+        bcf="results/imputed/final.bcf",
+        csi="results/imputed/final.bcf.csi",
+    output:
+        multiext("results/imputed/final", bed=".bed", bim=".bim", fam=".fam"),
+    log:
+        "logs/plink_bed/final.log",
+    conda:
+        "../envs/plink2.yml"
+    threads: 8
+    resources:
+        mem_mb=16000,
+    params:
+        prefix=subpath(output.bed, strip_suffix=".bed"),
+    shell:
+        "plink2 --bcf {input.bcf} --make-bed "
+        "--threads {threads} --memory {resources.mem_mb} "
+        "--out {params.prefix} > {log} 2>&1"

@@ -24,5 +24,6 @@ onerror:
 rule all:
     default_target: True
     input:
-        "results/imputed/all.bcf",
-        "results/imputed/all.bcf.csi",
+        "results/imputed/final.bcf",
+        "results/imputed/final.bcf.csi",
+        multiext("results/imputed/final", ".bed", ".bim", ".fam"),

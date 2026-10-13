@@ -12,6 +12,7 @@
 | `bam_filter.min_depth` | Drop samples whose mapped depth (mapped bases after duplicate removal / reference length) is below this (default 1.0). |
 | `bam_filter.max_unmapped_frac` | Drop samples whose fraction of unmapped reads is above this (default 0.8). |
 | `phase.batch_size` | Maximum number of BAMs imputed in one GLIMPSE2_phase job (default 200). |
+| `site_filter.min_info` | Keep sites whose IMPUTE INFO score, recomputed across all samples with `bcftools +impute-info`, is at least this (default 0.95). |
 | `fastp.extra` | Extra flags passed verbatim to fastp (e.g. quality cutoffs) |
 
 Threads/memory per rule are hard-coded in `workflow/rules/*.smk` (tuned for ~600 cores / ~5000 samples). Override by editing those `resources:` blocks.

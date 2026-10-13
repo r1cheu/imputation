@@ -30,5 +30,8 @@ bam_filter:
 phase:
   batch_size: 200
 
+site_filter:
+  min_info: 0.95
+
 fastp:
   extra: ""

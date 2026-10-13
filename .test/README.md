@@ -22,7 +22,8 @@ bash .test/setup_data.sh
 pixi run snakemake --directory .test --sdm conda --cores 8
 ```
 
-Expected output: `.test/results/imputed/all.bcf`.
+Expected output: `.test/results/imputed/final.bcf` and `final.{bed,bim,fam}`
+(`raw.bcf` holds the unfiltered sites).
 
 ## Files in git
 
