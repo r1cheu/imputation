@@ -151,6 +151,6 @@ rule plink_bed:
     params:
         prefix=subpath(output.bed, strip_suffix=".bed"),
     shell:
-        "plink2 --bcf {input.bcf} --make-bed "
+        "plink2 --bcf {input.bcf} --double-id --make-bed "
         "--threads {threads} --memory {resources.mem_mb} "
         "--out {params.prefix} > {log} 2>&1"
